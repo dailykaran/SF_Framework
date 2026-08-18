@@ -1,92 +1,80 @@
 /// <reference types="node" />
+import 'dotenv/config';
 import { defineConfig, devices } from '@playwright/test';
 
 /**
- * Read environment variables from file.
- * https://github.com/motdotla/dotenv
+ * Auth flow:
+ *
+ *  global-setup.ts  →  logs in 4 users in parallel
+ *                   →  writes .auth/sf-{role}.json for each
+ *
+ *  Each project below loads its own .json via storageState.
+ *  Tests start already authenticated — no login steps needed in specs.
+ *
+ *  global-teardown.ts  →  removes .auth/*.json after the run (CI hygiene)
  */
-// import dotenv from 'dotenv';
-// import path from 'path';
-// dotenv.config({ path: path.resolve(__dirname, '.env') });
 
-/**
- * See https://playwright.dev/docs/test-configuration.
- */
-const STORAGE_STATE_SFADMIN = '.auth/sfadmin.json';
 export default defineConfig({
   testDir: './tests',
-  /* Run tests in files in parallel */
-  fullyParallel: true,
-  /* Fail the build on CI if you accidentally left test.only in the source code. */
-  forbidOnly: !!process.env.CI,
-  /* Retry on CI only */
-  retries: process.env.CI ? 2 : 0,
-  /* Opt out of parallel tests on CI. */
-  workers: process.env.CI ? 1 : undefined,
-  /* Reporter to use. See https://playwright.dev/docs/test-reporters */
-  reporter: 'html',
-  /* Shared settings for all the projects below. See https://playwright.dev/docs/api/class-testoptions. */
-  use: {
-    /* Base URL to use in actions like `await page.goto('')`. */
-    // baseURL: 'http://localhost:3000',
 
-    /* Collect trace when retrying the failed test. See https://playwright.dev/docs/trace-viewer */
-    trace: 'on-first-retry',
-    viewport: { width: 2560, height: 1440 },
-    screenshot: 'only-on-failure',
-    video: 'retain-on-failure',
-    actionTimeout: 60000, 
-    navigationTimeout: 65000
+  globalSetup:    require.resolve('./tests/global_auth/global-setup'), 
+  globalTeardown: require.resolve('./tests/global_auth/global-teardown'),
+
+  fullyParallel: true,
+  forbidOnly:    !!process.env.CI,
+  retries:       process.env.CI ? 2 : 0,
+  workers:       process.env.CI ? 1 : undefined,
+  reporter:      'html',
+  timeout: 120_000,
+  expect: {
+    timeout: 15_000,
   },
 
-  /* Configure projects for major browsers */
+  use: {
+    viewport:          { width: 1920, height: 1080 },
+    headless: false,
+    trace:             'on-first-retry',
+    screenshot:        'only-on-failure',
+    video:             'retain-on-failure',
+    actionTimeout:     60_000,
+    navigationTimeout: 120_000,
+  },
+
   projects: [
+    // ── Admin ─────────────────────────────────────────────────────────────
     {
-      name: 'SFlogin',
-      testMatch: /.*SF\.spec\.ts/,
-      use: { 
+      name: 'chrome-admin',
+      use: {
         ...devices['Desktop Chrome'],
-        storageState: STORAGE_STATE_SFADMIN, 
-       },
+        storageState: '.auth/sf-admin.json',
+      },
     },
 
-    /*
+    // ── Editor / Translator ───────────────────────────────────────────────
     {
-      name: 'firefox',
-      use: { ...devices['Desktop Firefox'] },
+      name: 'chrome-translator',
+      use: {
+        ...devices['Desktop Chrome'],
+        storageState: '.auth/sf-translator.json',
+      },
     },
 
+    // ── Reviewer ──────────────────────────────────────────────────────────
     {
-      name: 'webkit',
-      use: { ...devices['Desktop Safari'] },
+      name: 'chrome-reviewer',
+      use: {
+        ...devices['Desktop Chrome'],
+        storageState: '.auth/sf-reviewer.json',
+      },
     },
-    */
 
-    /* Test against mobile viewports. */
-    // {
-    //   name: 'Mobile Chrome',
-    //   use: { ...devices['Pixel 5'] },
-    // },
-    // {
-    //   name: 'Mobile Safari',
-    //   use: { ...devices['iPhone 12'] },
-    // },
-
-    /* Test against branded browsers. */
-    // {
-    //   name: 'Microsoft Edge',
-    //   use: { ...devices['Desktop Edge'], channel: 'msedge' },
-    // },
-    // {
-    //   name: 'Google Chrome',
-    //   use: { ...devices['Desktop Chrome'], channel: 'chrome' },
-    // },
+    // ── CC Checker ─────────────────────────────────────────────────────────
+    {
+      name: 'chrome-cc-checker',
+      use: {
+        ...devices['Desktop Chrome'],
+        storageState: '.auth/sf-cc-checker.json',
+      },
+    },
   ],
-
-  /* Run your local dev server before starting the tests */
-  // webServer: {
-  //   command: 'npm run start',
-  //   url: 'http://localhost:3000',
-  //   reuseExistingServer: !process.env.CI,
-  // },
 });
