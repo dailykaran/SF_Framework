@@ -1,6 +1,6 @@
 /// <reference types="node" />
 import 'dotenv/config';
-import { defineConfig, devices } from '@playwright/test';
+import { defineConfig, devices, ReporterDescription } from '@playwright/test';
 
 /**
  * Auth flow:
@@ -14,6 +14,16 @@ import { defineConfig, devices } from '@playwright/test';
  *  global-teardown.ts  →  removes .auth/*.json after the run (CI hygiene)
  */
 
+const reporters: ReporterDescription[] = [
+  ['list'],
+  ['html', { outputFolder: 'reports/playwright-report', open: 'never' }],
+  ['allure-playwright', {
+    resultsDir: 'reports/allure-results',
+    detail: true,
+    suiteTitle: true
+  }],
+];
+
 export default defineConfig({
   testDir: './tests',
 
@@ -24,11 +34,12 @@ export default defineConfig({
   forbidOnly:    !!process.env.CI,
   retries:       process.env.CI ? 2 : 0,
   workers:       process.env.CI ? 1 : undefined,
-  reporter:      'html',
+  reporter: reporters,
   timeout: 120_000,
   expect: {
     timeout: 15_000,
   },
+
 
   use: {
     viewport:          { width: 1920, height: 1080 },

@@ -2,11 +2,20 @@
   "dependencies": {
     "@playwright/cli": "^0.1.18",
     "dotenv": "^17.4.2",
-    "playwright": "^1.62.1"
+    "playwright": "^1.62.1",
+    "winston": "^3.19.0"
+  },
+  "scripts": {
+    "allure:generate": "allure generate reports/allure-results --clean -o reports/allure-report",
+    "allure:open": "allure open reports/allure-report",
+    "allure:report": "npm run allure:generate && npm run allure:open",
+    "test:report:allure": "npm run allure:generate"
   },
   "devDependencies": {
+    "@faker-js/faker": "^10.6.0",
     "@playwright/test": "^1.62.1",
-    "@types/node": "^26.2.0"
-  },
-  "scripts": {}
+    "@types/node": "^26.2.0",
+    "allure-commandline": "^2.43.0",
+    "allure-playwright": "^3.10.2"
+  }
 }
