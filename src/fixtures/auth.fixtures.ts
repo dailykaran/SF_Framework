@@ -1,5 +1,6 @@
 import { test as base, expect, type Page } from '@playwright/test';
 import * as path from 'path';
+import { EditReviewPage } from '../pages/editReview';
 
 /**
  * Auth fixtures — use these when a single test needs to act as
@@ -20,6 +21,10 @@ type AuthFixtures = {
   translatorPage:   Page;
   reviewerPage: Page;
   ccCheckerPage: Page;
+
+  adminEditReviewPage: EditReviewPage;
+  translatorEditReviewPage: EditReviewPage;
+  reviewerEditReviewPage: EditReviewPage;
 };
 
 const AUTH = {
@@ -65,6 +70,18 @@ export const test = base.extend<AuthFixtures>({
     const page = await makeAuthPage(browser, AUTH.ccChecker);
     await use(page);
     await page.context().close();
+  },
+
+  adminEditReviewPage: async ({ adminPage }, use) => {
+    await use(new EditReviewPage(adminPage));
+  },
+
+  translatorEditReviewPage: async ({ translatorPage }, use) => {
+    await use(new EditReviewPage(translatorPage));
+  },
+
+  reviewerEditReviewPage: async ({ reviewerPage }, use) => {
+    await use(new EditReviewPage(reviewerPage));
   },
 });
 

@@ -192,7 +192,7 @@ async function performLogin(
     );
   }
 
-  const context = await browser.newContext();
+  const context = await browser.newContext({ viewport: { width: 1920, height: 1080 } });
   const page    = await context.newPage();
   const loginUsers = new LoginUsers(page, baseurl);
 
@@ -244,11 +244,13 @@ async function loginUser(
 async function globalSetup(_config: FullConfig): Promise<void> {
   fs.mkdirSync(AUTH_DIR, { recursive: true });
 
-  const browser = await chromium.launch();
+  const browser = await chromium.launch({ headless: true, args: ['--no-sandbox']});
 
   try {
-    // Same logic runs for all 4 users in parallel
-    await Promise.all(USERS.map(user => loginUser(browser, user)));
+    // Same logic runs for all 4 users in sequence (for debugging)
+    for (const user of USERS) {
+      await loginUser(browser, user);
+    }
   } finally {
     await browser.close();
   }
