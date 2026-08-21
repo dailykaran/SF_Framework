@@ -43,7 +43,7 @@ export default defineConfig({
 
   use: {
     viewport:          { width: 1920, height: 1080 },
-    headless: false,
+    headless:          !!process.env.CI,
     trace:             'on-first-retry',
     screenshot:        'only-on-failure',
     video:             'retain-on-failure',

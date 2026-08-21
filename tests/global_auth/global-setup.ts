@@ -247,8 +247,16 @@ async function globalSetup(_config: FullConfig): Promise<void> {
   const browser = await chromium.launch({ headless: true, args: ['--no-sandbox']});
 
   try {
-    // Same logic runs for all 4 users in sequence (for debugging)
-    for (const user of USERS) {
+    const selectedRole = process.env.PLAYWRIGHT_ROLE;
+    const usersToLogin = selectedRole
+      ? USERS.filter((user) => user.role === selectedRole)
+      : USERS;
+
+    if (selectedRole && usersToLogin.length === 0) {
+      throw new Error(`Unknown PLAYWRIGHT_ROLE: "${selectedRole}"`);
+    }
+
+    for (const user of usersToLogin) {
       await loginUser(browser, user);
     }
   } finally {

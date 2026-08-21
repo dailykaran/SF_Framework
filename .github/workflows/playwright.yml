@@ -1,4 +1,4 @@
-name: Playwright Tests
+name: Scripture Forge CC Checker Test
 on:
   push:
     branches: [ main, master ]
@@ -18,10 +18,21 @@ jobs:
     - name: Install Playwright Browsers
       run: npx playwright install --with-deps
     - name: Run Playwright tests
-      run: npx playwright test
+      run: npx playwright test tests/login/sf_cc_user.spec.ts --project=chrome-cc-checker
+      env:
+        BASE_URL: ${{ secrets.BASE_URL }}
+        PLAYWRIGHT_ROLE: cc_checker
+        SF_CC_CHECKER_EMAIL: ${{ secrets.SF_CC_CHECKER_EMAIL }}
+        SF_CC_CHECKER_PASSWORD: ${{ secrets.SF_CC_CHECKER_PASSWORD }}
+    - name: Generate Allure report
+      if: ${{ !cancelled() }}
+      run: npm run allure:generate
     - uses: actions/upload-artifact@v4
       if: ${{ !cancelled() }}
       with:
-        name: playwright-report
-        path: playwright-report/
+        name: playwright-and-allure-reports
+        path: |
+          reports/playwright-report/
+          reports/allure-results/
+          reports/allure-report/
         retention-days: 30
