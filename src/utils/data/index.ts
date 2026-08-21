@@ -1,5 +1,6 @@
 export { BOOKS, MIN_VERSES_PER_CHAPTER, MAX_VERSES_PER_CHAPTER, QUESTION_TEMPLATES } from './scripture.data';
 export type { BibleBook } from './scripture.data';
+export { CommonFakerData } from './commonDataGenerator';
 export {
   seedScripture,
   getRandomReference,
