@@ -92,7 +92,7 @@ export const test = base.extend<AuthFixtures>({
           errors,
         });
       }
-      testLogger.info('Test finished', { status: testInfo.status });
+      await writeLog(testLogger, 'info', 'Test finished', { status: testInfo.status });
 
       if (testInfo.status !== testInfo.expectedStatus) {
         if (fs.existsSync(logFile)) {

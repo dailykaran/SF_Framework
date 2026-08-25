@@ -10,6 +10,7 @@ const RUN_ID = process.env.PLAYWRIGHT_RUN_ID ?? new Date().toISOString().replace
 const FRAMEWORK_LOG_FILE = path.join(logDirectory, 'framework.log');
 const secretPattern = /(password|token|secret|api[-_]?key|authorization)/i;
 const ansiEscapePattern = /\u001b\[[0-?]*[ -\/]*[@-~]/g;
+const writeMarker = Symbol('writeLogMarker');
 
 fs.mkdirSync(logDirectory, { recursive: true });
 
@@ -46,21 +47,50 @@ export function writeLog(
 ): Promise<void> {
     return new Promise((resolve, reject) => {
         const transports = log.transports;
-        let written = 0;
-        const onLogged = (): void => {
-            written += 1;
-            if (written === transports.length) resolve();
+        let completed = 0;
+        let settled = false;
+        const marker = Symbol('write');
+        const cleanups: Array<() => void> = [];
+
+        const cleanup = (): void => {
+            for (const removeListeners of cleanups) removeListeners();
+        };
+
+        const finish = (error?: Error): void => {
+            if (settled) return;
+            if (error) {
+                settled = true;
+                cleanup();
+                reject(error);
+                return;
+            }
+            completed += 1;
+            if (completed === transports.length) {
+                settled = true;
+                cleanup();
+                resolve();
+            }
         };
 
         for (const transport of transports) {
-            transport.once('logged', onLogged);
+            const onLogged = (info: { [writeMarker]?: symbol }): void => {
+                if (info[writeMarker] === marker) finish();
+            };
+            const onError = (error: Error): void => finish(error);
+            transport.on('logged', onLogged);
+            transport.once('error', onError);
+            cleanups.push(() => {
+                transport.removeListener('logged', onLogged);
+                transport.removeListener('error', onError);
+            });
         }
 
-        try {
-            log.log(level, message, metadata);
-        } catch (error) {
-            reject(error);
+        if (transports.length === 0) {
+            resolve();
+            return;
         }
+
+        log.log({ level, message, ...metadata, [writeMarker]: marker });
     });
 }
 
