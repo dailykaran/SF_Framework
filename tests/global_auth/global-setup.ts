@@ -2,6 +2,9 @@ import { chromium, FullConfig } from '@playwright/test';
 import { LoginUsers } from '../../src/pages/loginSF_Users'; 
 import * as fs from 'fs';
 import * as path from 'path';
+import { clearFrameworkLog, createLogger, serializeError } from '../../src/utils/logger/logger';
+
+const log = createLogger('global-setup');
 
 /**
  * Global Setup — runs ONCE before all projects.
@@ -126,7 +129,7 @@ function isStorageStateValid(filePath: string): boolean {
       cookie.expires !== -1 &&          // -1 = session cookie, no expiry
       cookie.expires < cutoff
     ) {
-      console.log(
+      log.warn(
         `   ⚠️  [cookie]     "${cookie.name}" expired at ` +
         `${new Date(cookie.expires * 1000).toISOString()}`,
       );
@@ -142,7 +145,7 @@ function isStorageStateValid(filePath: string): boolean {
         try {
           const cache = JSON.parse(item.value) as { expiresAt?: number };
           if (typeof cache.expiresAt === 'number' && cache.expiresAt < cutoff) {
-            console.log(
+            log.warn(
               `   ⚠️  [auth0 cache] expiresAt ` +
               `${new Date(cache.expiresAt * 1000).toISOString()}`,
             );
@@ -160,7 +163,7 @@ function isStorageStateValid(filePath: string): boolean {
           try {
             const payload = JSON.parse(decodeBase64Url(parts[1])) as { exp?: number };
             if (typeof payload.exp === 'number' && payload.exp < cutoff) {
-              console.log(
+              log.warn(
                 `   ⚠️  [jwt]         "${item.name}" exp reached at ` +
                 `${new Date(payload.exp * 1000).toISOString()}`,
               );
@@ -204,7 +207,7 @@ async function performLogin(
     }
 
     await context.storageState({ path: user.file });
-    console.log(`[${user.role}] storageState saved → ${user.file}`);
+    log.info(`[${user.role}] storageState saved`, { file: user.file });
   } finally {
     await context.close();
   }
@@ -221,19 +224,19 @@ async function loginUser(
 
   // ── Path 1: JSON does not exist → login and create file ──────────────────
   if (!fs.existsSync(user.file)) {
-    console.log(`[${user.role}] no session file — logging in`);
+    log.info(`[${user.role}] no session file - logging in`);
     await performLogin(browser, user);
     return;
   }
 
   // ── Path 2: JSON exists → validate all 3 expiry sources ──────────────────
   if (isStorageStateValid(user.file)) {
-    console.log(`[${user.role}] session valid — skipping login`);
+    log.info(`[${user.role}] session valid - skipping login`);
     return;
   }
 
   // At least one expiry check failed → overwrite with a fresh session
-  console.log(`[${user.role}] session expired — re-logging in`);
+  log.info(`[${user.role}] session expired - re-logging in`);
   await performLogin(browser, user);
 }
 
@@ -242,6 +245,13 @@ async function loginUser(
 // ─────────────────────────────────────────────────────────────────────────────
 
 async function globalSetup(_config: FullConfig): Promise<void> {
+  clearFrameworkLog();
+  log.info('Global authentication setup started');
+  log.debug('Global setup configuration', {
+    baseUrl: baseurl,
+    selectedRole: process.env.PLAYWRIGHT_ROLE ?? 'all',
+    users: USERS.map(user => user.role),
+  });
   fs.mkdirSync(AUTH_DIR, { recursive: true });
 
   const browser = await chromium.launch({ headless: true, args: ['--no-sandbox']});
@@ -257,13 +267,18 @@ async function globalSetup(_config: FullConfig): Promise<void> {
     }
 
     for (const user of usersToLogin) {
+      log.debug(`[${user.role}] checking authentication state`, { file: user.file });
       await loginUser(browser, user);
     }
+  } catch (error) {
+    log.error('Global authentication setup failed', { error: serializeError(error) });
+    log.debug('Global setup failure diagnostics', { error: serializeError(error) });
+    throw error;
   } finally {
     await browser.close();
   }
 
-  console.log('\n  Session check complete. Starting test run...\n');
+  log.info('Session check complete. Starting test run.');
 }
 
 export default globalSetup;

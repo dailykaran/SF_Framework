@@ -9,6 +9,9 @@ import {
   getQuestionAnswerForChapter,
   getQuestionAnswersForChapter,
 } from '../../src/utils/data';
+import { createLogger, getSpecLogFilePath } from '../../src/utils/logger/logger';
+
+const log = createLogger('scripture-generator', getSpecLogFilePath(__filename));
 
 test.describe('scripture data generator', () => {
   test('generates a reference with a valid book, chapter and verse', () => {
@@ -20,29 +23,29 @@ test.describe('scripture data generator', () => {
     expect(ref.chapter).toBeLessThanOrEqual(book!.chapters);
     expect(ref.verse).toBeGreaterThanOrEqual(1);
     expect(ref.reference).toBe(`${ref.book} ${ref.chapter}:${ref.verse}`);
-    console.log(`Generated reference: ${ref.reference.toString()}, book: ${ref.book.toString()}, chapter: ${ref.chapter.toString()}, verse: ${ref.verse.toString()}`);
+    log.info('Generated reference', { reference: ref.reference, book: ref.book, chapter: ref.chapter, verse: ref.verse });
   });
 
   test('generates a verse with non-empty placeholder text', () => {
     const verse = getRandomVerse();
     expect(verse.text.length).toBeGreaterThan(0);
-    console.log(`Generated verse: ${verse.reference.toString()} - "${verse.text.toString()}"`);
+    log.info('Generated verse', { reference: verse.reference, text: verse.text });
   });
 
   test('generates multiple verses', () => {
     const verses = getRandomVerses(5);
-    console.log(`Generated ${verses.length} verses:`);
+    log.info('Generated verses', { count: verses.length });
     expect(verses).toHaveLength(5);
     for (const verse of verses) {
-      console.log(`Generated verse: ${verse.reference.toString()} - "${verse.text.toString()}"`);
+      log.info('Generated verse', { reference: verse.reference, text: verse.text });
       expect(verse.text.length).toBeGreaterThan(0);
-      console.log(`Generated verse: ${verse.reference.toString()} - "${verse.text.toString()}"`);
+      log.info('Generated verse', { reference: verse.reference, text: verse.text });
     }
   });
 
   test('generates a question/answer pair tied to a reference', () => {
     const qa = getRandomQuestionAnswer();
-    console.log(`Generated Q&A: ${qa.reference} - Q: "${qa.question}" A: "${qa.answer}"`);
+    log.info('Generated Q&A', { reference: qa.reference, question: qa.question, answer: qa.answer });
 
     expect(qa.question).toContain(qa.reference);
     expect(qa.question.endsWith('?') || qa.question.endsWith('.')).toBe(true);

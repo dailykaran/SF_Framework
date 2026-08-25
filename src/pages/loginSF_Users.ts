@@ -1,5 +1,8 @@
 import { Page, expect } from '@playwright/test';
 import process from 'process';
+import { createLogger } from '../utils/logger/logger';
+
+const log = createLogger('LoginUsers');
 
 
 export class LoginUsers {
@@ -16,6 +19,7 @@ export class LoginUsers {
      * We reuse this so we don't have to duplicate the 40+ lines of code for every user.
      */
     private async performParatextLogin(email: string, password: string) {
+        log.info('Starting Paratext login', { email });
         await this.page.setDefaultNavigationTimeout(90000); 
         await this.page.goto(this.baseUrl);
         
@@ -95,12 +99,12 @@ export class LoginUsers {
     }
 
     async paratextLogin(userEmail: string, userPassword: string) {
-        console.log('Logging in User 1...');
+        log.info('Logging in Paratext user');
         await this.performParatextLogin(userEmail, userPassword);
     }
 
     async CCLogin() {
-        console.log('Logging in User 2...');
+        log.info('Logging in CC checker');
         await this.performCCLogin(`${process.env.SF_CC_CHECKER_EMAIL}`, `${process.env.SF_CC_CHECKER_PASSWORD}`);
     }
 

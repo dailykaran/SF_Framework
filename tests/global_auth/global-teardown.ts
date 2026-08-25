@@ -1,5 +1,8 @@
 import * as fs from 'fs';
 import * as path from 'path';
+import { appendFrameworkLogToSpecLogs, createLogger, removeFrameworkLog } from '../../src/utils/logger/logger';
+
+const log = createLogger('global-teardown');
 
 /**
  * Global Teardown — runs ONCE after all projects finish.
@@ -12,6 +15,11 @@ import * as path from 'path';
 const AUTH_DIR = path.resolve('.auth');
 
 async function globalTeardown(): Promise<void> {
+  const frameworkLog = path.resolve('reports', 'logs', new Date().toISOString().slice(0, 10), 'framework.log');
+  const startOffset = fs.existsSync(frameworkLog) ? fs.statSync(frameworkLog).size : 0;
+  log.info('Global authentication teardown started');
+  await appendFrameworkLogToSpecLogs(log, startOffset);
+  removeFrameworkLog();
   if (!fs.existsSync(AUTH_DIR)) return;
 
 /*   const files = fs
@@ -20,10 +28,10 @@ async function globalTeardown(): Promise<void> {
 
   for (const file of files) {
     fs.rmSync(path.join(AUTH_DIR, file), { force: true });
-    console.log(`🗑️   Removed session: ${file}`);
+    log.info('Removed session', { file });
   }
 
-  console.log('\n🧹  Auth teardown complete.\n'); */
+  log.info('Auth teardown complete'); */
 }
 
 export default globalTeardown;

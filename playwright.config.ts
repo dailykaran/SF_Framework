@@ -2,6 +2,8 @@
 import 'dotenv/config';
 import { defineConfig, devices, ReporterDescription } from '@playwright/test';
 
+process.env.PLAYWRIGHT_RUN_ID ??= new Date().toISOString().replace(/[:.]/g, '-');
+
 /**
  * Auth flow:
  *
@@ -22,6 +24,7 @@ const reporters: ReporterDescription[] = [
     detail: true,
     suiteTitle: true
   }],
+  ['./src/utils/logger/playwright-logger-reporter.ts'],
 ];
 
 export default defineConfig({
