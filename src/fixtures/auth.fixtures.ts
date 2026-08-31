@@ -1,6 +1,6 @@
 import { test as base, expect, type Page } from '@playwright/test';
 import * as path from 'path';
-import { EditReviewPage } from '../pages/editReview';
+import { EditReviewPage } from '../pages/Edit_Review/editReview';
 
 /**
  * Auth fixtures — use these when a single test needs to act as

@@ -1,5 +1,5 @@
 import { chromium, FullConfig } from '@playwright/test';
-import { LoginUsers } from '../../src/pages/loginSF_Users'; 
+import { LoginUsers } from '../../src/pages/login/loginSF_Users'; 
 import * as fs from 'fs';
 import * as path from 'path';
 

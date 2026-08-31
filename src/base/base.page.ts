@@ -1,253 +1,665 @@
-import {Page, test, expect, chromium, BrowserContext, Locator, Frame, FrameLocator} from '@playwright/test'
 
-export abstract class playwright_Wrapper{
-    readonly page: Page
-    readonly context: BrowserContext
-    protected newWindow: Page | null = null;
+import { Page, test, expect, BrowserContext, Locator } from "@playwright/test";
+import * as path from 'path';
+import fs from 'fs';
 
-    constructor (page: Page, context: BrowserContext){
+
+
+export abstract class PlaywrightWrapper {
+
+    page: Page;
+    readonly context: BrowserContext;
+    private static newPage: Page | null = null;
+
+    protected getNewPage(): Page {
+        if (!PlaywrightWrapper.newPage) {
+            throw new Error('New tab is not initialized. Did you forget to call childTab()?');
+        }
+        return PlaywrightWrapper.newPage;
+    }
+    constructor(page: Page, context: BrowserContext,) {
         this.page = page;
         this.context = context;
-
     }
 
-    async loadApp(url: string): Promise<void>{
-        try{
-            await test.step(`the URL ${url} loaded`, async()=>{
-                await this.page.goto(url);
-            })
-        }catch(error){
-            console.error("Error loading the page", error);
+
+    /**
+   * Types into the specified textbox after clearing any existing text.
+   * 
+   * @param {string} locator - The locator for the textbox element.
+   * @param {string} name - The name of the textbox element.
+   * @param {string} data - The data to be typed into the textbox.
+   */
+    async type(locator: string, name: string, data: string) {
+        await test.step(`Textbox ${name} filled with data: ${data}`, async () => {
+
+
+            await this.page.locator(locator).clear();
+            await this.page.locator(locator).fill(data);
+
         }
+        )
     }
 
-    async click(locator: string, name?: string, type?: string): Promise<void>{
-        test.step(`The ${name} ${type} is click`, async()=>{
-            await this.page.waitForSelector(locator, {state: 'attached', timeout: 3000});
-            await this.page.locator(locator).click();
-        })
-    }
 
-    async forceClick(locator: string, name: string, type: string): Promise<void> {
-        test.step(`the ${name} ${type} is forced click`, async()=>{
-            await this.page.waitForSelector(locator, {state: 'visible'});
-            await this.page.locator(locator).click({force: true});
-        })
-    }
+    /**
+     * Types into the specified textbox, clears existing text, and presses <ENTER>.
+     * @param {string} locator - The locator for the textbox element.
+     * @param {string} name - The name of the textbox element.
+     * @param {string} data - The data to be typed into the textbox.
+     */
+    async fillAndEnter(locator: string, name: string, data: string) {
+        await test.step(`Textbox ${name} filled with data: ${data}`, async () => {
+            await this.page.locator(locator).clear();
+            await this.page.fill(locator, data, { force: true })
+            await this.page.focus(locator)
+            await this.page.keyboard.press("Enter");
 
-    async typeEnter(locator: string, name: string, type: string):Promise<void> {
-        test.step(`Textbox ${name} filled with ${type} application`, async()=>{
-            await this.page.waitForSelector(locator, {state: 'attached'});
-            await expect(this.page.locator(locator)).toBeEditable();
-            await this.page.locator(locator).fill(type);
-            await this.page.keyboard.press('Enter');
-        })
-    }
-
-    async typeFill(Locator: string, name: string, type: string):Promise<void> {
-        test.step(`TextBox ${name} filled with ${type} application`, async()=>{
-            await this.page.waitForSelector(Locator, {state: 'attached'});
-            await expect(this.page.locator(Locator)).toBeEditable();
-            await this.page.locator(Locator).fill(type);
-        })
-    }
-
-    async dynamicButtonClick(locator: string, name: string, type: string): Promise<void>{
-        test.step(`the ${name} ${type} is dynamicElement clicked`, async()=>{
-            try{
-                await this.page.waitForSelector(locator, {state: 'attached', timeout: 60000});
-                await this.page.locator(locator).click();
-            }catch(error){
-                console.error(`Failed to find or click on the selector ${locator}`, error);
-                throw error;                
-            }
-        })
-    }
-    
-    async assertElementVisible(locator: string, name: string) {
-        await test.step(`Assert the element ${name} is visible`, async()=>{
-            const element = this.page.locator(locator);
-            await expect(element).toBeVisible();
-        })
-    }
-
-    async assertContainText(locator: string, text: string, name: string){
-        await test.step(`Assert the element ${name} contain text ${text}`, async()=>{
-            const element = this.page.locator(locator);
-            await expect(element).toContainText(text);
-        })            
-    }
-
-    async assertElementCount(locator: string, expectedCount: number, name: string){
-        await test.step(`Assert the element ${name} count is ${expectedCount}`, async()=>{
-            const element = this.page.locator(locator);
-            await expect(element).toHaveCount(expectedCount);
-        })
-    }
-
-    async assertURLContent(name: string){
-        await test.step(`Assert the url ${name}`, async()=>{
-            const regx = new RegExp(String.raw`/.*${name}/`, 'g');
-            await this.page.waitForURL(regx);
-            expect(this.page.url()).toContain(name);
-        })
-    }
-
-    async assertToastMessage(locator: string, assertText: string){
-        await test.step(`Assert the toast message ${assertText}`, async()=>{
-            await this.page.waitForLoadState('domcontentloaded');
-            const toastMSG = this.page.locator(locator);
-            await expect(toastMSG).toContainText(assertText);
-            console.log(await toastMSG.innerText());
-            //await this.page.waitForSelector(locator, { state: "detached" });
-        })
-    }
-
-    async waitForElementVisible(locator: string, name: string, timeoutNumber: number ){
-        await test.step(`${name} element needs to be visible`, async()=>{
-            await this.page.locator(locator).waitFor({state: 'visible', timeout: timeoutNumber,});
-        })
-    }
-
-    async waitForElementHidden(locator: string, name: string, timeoutNumber?: number){
-        await test.step(`${name} element needs to be hide`, async()=>{
-            const element = await this.page.locator(locator);
-            await element.waitFor({state: 'hidden', timeout: timeoutNumber});
-        })
-    }
-
-    async waitForElementTextAssert(locator: string, text: string, name: string, timeoutNumber: number){
-        await test.step(`${name} element needs to be wait and assert the ${text}`, async()=>{
-            const element = await this.page.locator(locator);
-            await element.waitFor({state: 'attached', timeout: timeoutNumber});
-            await expect(element).toContainText(text);
-        })
-    }
-
-    async waitForDialogAssert(locator: string, text: string, timeoutNumber: number){
-        await test.step(`${text} dialog is visible to appeared and assert the dialog`, async()=>{
-            const element = await this.page.locator(locator).getByText(text, {exact: true});
-            await element.waitFor({state: 'attached', timeout: timeoutNumber});
-            await expect(element).toContainText(text);
-        })
-
-    }
-
-    async getText(locator: string): Promise<string> {
-        return await test.step(`Getting text from the ${locator}`, async()=>{            
-            await this.page.waitForSelector(locator, {state: 'attached'});
-            return await this.page.locator(locator).innerText();
-        })
-    }
-
-    async getTitle(locator: string): Promise<string>{
-        return await test.step(`Getting the element ${locator} `, async()=>{
-            await this.page.waitForLoadState('networkidle');
-            return await this.page.title();
-        })
-    }
-
-    async getInput(locator: string): Promise<string>{
-        return await test.step(`Getting ${locator}, from text`, async()=>{
-            await this.page.waitForSelector(locator, {state: 'attached'})
-            return await this.page.locator(locator).inputValue();
-        })
-    }
-
-    async waitForLoadState(state: 'load' | 'domcontentloaded' | 'networkidle'): Promise<void>{
-        await test.step(`wait for an element`, async()=>{
-            await this.page.waitForLoadState(state, {timeout: 6000});
-        })
-    }
-    
-    async getIframe(locator: string): Promise<FrameLocator>{
-        return await test.step(`return iframe element`, async()=>{
-            const iframe = this.page.frameLocator(locator);
-            return iframe;
-        })
-    }
-
-    async iframeFill(locator: string, fillText: string, fillTextBox: string): Promise<void>{
-        await test.step(`getiframe and ${fillText} in the ${fillTextBox}`, async()=>{
-            await this.page.frameLocator(locator).locator(fillTextBox).fill(fillText);
-            //expect(await this.page.frameLocator(locator).locator(fillTextBox).getAttribute('value')).toContain(fillText);
-            await expect(this.page.frameLocator(locator).locator(fillTextBox)).toHaveValue(fillText);
-        })
-    }
-
-    async iframeClick(locator: string, fillbutton: string): Promise<void>{
-        await test.step(`getiframe and click the ${fillbutton}`, async()=>{
-            await this.page.waitForSelector(locator, {state: 'attached'});
-            await this.page.frameLocator(locator).locator(fillbutton).click();
-        })
-    }
-
-    async comboBoxList(locator: string, selectItem: string):Promise<void>{
-        await test.step(`Select a item from combo box ${selectItem}`, async()=>{
-            await this.page.waitForSelector(locator, {state: 'attached'});
-            await this.page.locator(locator, {hasText: selectItem}).click();
-        })
-    }
-
-    async waitSpinnerAndClose():Promise<void>{
-        await test.step(`find the spinner and close the dialog`, async()=>{
-            await this.page.addLocatorHandler(
-                //this.page.getByRole('status').locator('visible=true'),
-                await this.page.locator('.slds-spinner_container div.slds-spinner span'),
-                async() => {
-                    await this.page.getByRole('button', {name: 'Close this window'}).click();
-                    await this.page.waitForLoadState('networkidle');
-                }
-            )
-        })
-    }
-
-    async handleNewTab(newWindowTabLocator: string): Promise<Page>{
-        return await test.step(`Window is opened`, async () => {
-                const [newTab] = await Promise.all([
-                this.context.waitForEvent("page"),
-                this.page.locator(newWindowTabLocator).click()
-                ]);
-                return newTab
         });
     }
 
-    async getbyrole(nametext: string, roletype?: any  ): Promise<void>{
-        test.step(`The ${nametext} ${roletype} is click`, async()=>{
-            //console.log('display the role type: ' + typeof(roletype));
-            await this.page.getByRole(roletype, { name: nametext}).click();            
+    /**
+    * Types the specified data into a textbox using keyboard input, after clearing existing text.
+    * @param {string} locator - The locator for the textbox element.
+    * @param {string} data - The data to be typed into the textbox.
+  */
+    async keyboardType(locator: string, data: string) {
+        await test.step(`Textbox filled with data: ${data}`, async () => {
+            await this.page.locator(locator).clear();
+            await this.page.focus(locator);
+            await this.page.keyboard.type(data, { delay: 100 });
+        });
+    }
+
+    /**
+    * Types the specified data into a textbox and presses <Enter> after clearing the existing text.
+    * @param {string} locator - The locator for the textbox element.
+    * @param {string} name - The name of the textbox element.
+    * @param {string} data - The data to be typed into the textbox.
+    */
+    async typeAndEnter(locator: string, name: string, data: string) {
+        await test.step(`Textbox ${name} filled with data: ${data}`, async () => {
+            await this.page.locator(locator).clear();
+            await this.page.keyboard.type(data, { delay: 400 });
+            await this.page.keyboard.press("Enter");
+        });
+    }
+
+    /**
+     * Clicks on the specified textbox element.
+     * @param {string} locator - The locator for the element.
+     * @param {string} name - The name of the element.
+     * @param {string} type - The type of the element
+     */
+    async click(locator: string, name: string, type: string) {
+        await test.step(`The ${name} ${type} clicked`, async () => {
+            await this.page.waitForSelector(locator, { state: 'visible' });
+            await this.page.locator(locator).click();
+        });
+    }
+
+    async forceClick(locator: string, name: string, type: string) {
+        await test.step(`The ${name} ${type} clicked`, async () => {
+            await this.page.waitForSelector(locator, { state: 'visible' });
+            await this.page.locator(locator).click({ force: true });
+        });
+    }
+
+    async storeState(path: string): Promise<void> {
+        try {
+            await this.context.storageState({ path });
+            console.log(`Storage state saved to: ${path}`);
+        } catch (error) {
+            console.error(`Failed to save storage state to: ${path}`, error);
+        }
+    }
+
+    /**
+    * Loads the specified URL in the browser.
+    * 
+    * @param {string} url - The URL to navigate to.
+    */
+    public async loadApplication(url: string) {
+        try {
+            await this.page.goto(url); // Increased timeout for 60 seconds
+            console.log(`Successfully loaded the URL: ${url}`);
+        } catch (error) {
+            console.log(`Error loading the page at ${url}:`);
+            throw new Error(`Failed to load the page at ${url}`);
+        }
+    }
+
+    /**
+    * Retrieves the inner text of the specified element.
+    * 
+    * @param {string} locator - The locator for the element.
+    * @returns {Promise<string>} - The inner text of the element.
+    */
+    async getInnerText(locator: string): Promise<string> {
+        return await this.page.locator(locator).innerText();
+    }
+
+    /**
+    * Retrieves the text content of the specified element.
+    * 
+    * @param {string} locator - The locator for the element.
+    * @returns {Promise<string | null | any>} - The text content of the element, or null if none is found.
+    */
+    async getTextContent(locator: string): Promise<string | null | any> {
+        return await this.page.locator(locator).textContent();
+    }
+
+    /**
+    * Retrieves the input value of the specified element (e.g., from an input field).
+    * 
+    * @param {string} locator - The locator for the input element.
+    * @returns {Promise<string>} - The current value of the input element.
+    */
+    async getText(locator: string): Promise<string> {
+        return await this.page.locator(locator).inputValue();
+    }
+
+    /**
+    * Retrieves the title of the current page after it has fully loaded.
+    * 
+    * @returns {Promise<string>} - The title of the page.
+    */
+    async getTitle(): Promise<string> {
+        await this.page.waitForLoadState('load');
+        return await this.page.title();
+    }
+
+    /**
+    * Waits for a specific element to be attached to the DOM.
+    * 
+    * @param {string} locator - The locator for the element to wait for.
+    * @param {string} name - A descriptive name for the element (not used in this function but could be useful for logging).
+    */
+    async waitSelector(locator: string, name?: string | "Element") {
+        await test.step(`Waiting for ${name} Visible`, async () => {
+            await this.page.waitForSelector(locator, { timeout: 30000, state: "attached" });
         })
     }
 
-    async getbyroleFill(roletype: any, TextBoxName: string, TextBoxContent: string): Promise<void>{
-        test.step(`The ${TextBoxName} ${roletype} is fill`, async()=>{
-            //console.log('display the role type: ' + typeof(roletype));
-            await this.page.getByRole(roletype , {name: TextBoxName}).fill(TextBoxContent);            
+    /**
+    * Fetches the value of a specified attribute from an element.
+    * 
+    * @param {string} locator - The locator for the element.
+    * @param {string} attName - The name of the attribute to retrieve.
+    * @returns {Promise<string | null>} - The value of the attribute, or null if the attribute does not exist.
+    */
+    async fetchattribute(locator: string, attName: string) {
+        const eleValue = await this.page.$(locator);
+        if (!eleValue) {
+            return null;
+        }
+        return await eleValue.evaluate((node, attributeName) => node.getAttribute(attributeName), attName);
+    }
+
+    /**
+    * Retrieves the number of open browser windows (pages) in the current context.
+    *  
+    * @returns {Promise<number>} - The number of open browser windows.
+    */
+    async multipleWindowsCount(): Promise<number> {
+        const windowslength = this.page.context().pages().length;
+        return windowslength;
+    }
+
+    /**
+    * Focuses on a new window that opens after clicking an element and retrieves its title.
+    * 
+     * @param {string} locator - The locator for the element to click that opens the new window.
+     * @returns {Promise<any>} - The title of the newly opened window.
+     */
+    async focusWindow(locator: string): Promise<any> {
+        const newPage = this.context.waitForEvent('page');
+        await this.page.locator(locator).click()
+        const newWindow = await newPage;
+        await newWindow.waitForLoadState('load')
+        return await newWindow.title();
+    }
+
+    /**
+     * Switches to a new window that opens after clicking an element and brings it to the front.
+     * 
+     * @param {string} windowTitle - The title of the window to switch to.
+     * @param {string} locator - The locator for the element to click that opens the new window.
+     * @returns {Promise<Page | null>} - The new window with the specified title, or null if not found.
+     */
+    async switchToWindow(windowTitle: any, locator: string): Promise<Page | null> {
+        const [newPage] = await Promise.all([
+            this.context.waitForEvent('page'),
+            this.page.locator(locator).click()
+        ]);
+        const pages = newPage.context().pages();
+        for (const page of pages) {
+            if (await page.title() === windowTitle) {
+                await page.bringToFront();
+                return page;
+            }
+        }
+        console.log(`No page found with title: ${windowTitle}`);
+        return null;
+    }
+
+    async acceptAlert(Data: string) {
+        this.page.on("dialog", async (dialog) => {
+            dialog.message()
+            await dialog.accept(Data);
+            console.log('Dialog Message:', dialog.message());
+        });
+    }
+
+    async clickinFrame(frameLocator: string, locator: string, name: string, type: string, index?: number) {
+        await test.step(`The ${type} ${name} clicked`, async () => {
+            const frameEle = this.page.frameLocator(frameLocator)
+            const elementCount = await frameEle.locator(locator).count();
+            if (elementCount > 0) {
+                await this.page.frameLocator(frameLocator).locator(locator).nth(index ?? 0).click({ force: true });
+            } else {
+                await this.page.locator(locator).click();
+            }
         })
     }
 
-    async getbyroleClear(roletype: any, TextBoxName: string){
-        test.step(`The ${TextBoxName} is clear`, async()=>{
-            await this.page.getByRole(roletype , {name: TextBoxName}).clear();
+
+    async verifyEleinFrame(frameLocator: string, locator: string, name: string) {
+        await test.step(`Verifying the ${name} is present in the frame`, async () => {
+            try {
+                await this.page.waitForSelector(frameLocator, { state: 'attached', timeout: 5000 });
+            } catch (error) {
+                return;
+            }
+            const frameEle = this.page.frameLocator(frameLocator)
+            const elementCount = await frameEle.locator(locator).count();
+            if (elementCount > 0) {
+                try {
+                    const frameVisible = await frameEle.locator('body').isVisible({ timeout: 5000 });
+                    expect(frameVisible).toBeTruthy();
+                    console.log("Frame element is visible");
+
+                } catch (error) {
+                    console.error(error)
+                }
+            }
+        });
+    }
+
+    async verifyAndClickEleinFrame(frameLocator: string, locator: string, name: string) {
+        await test.step(`The ${name} is verified`, async () => {
+            const frameEle = this.page.frameLocator(frameLocator)
+            const elementCount = await frameEle.locator(locator).count();
+            if (elementCount > 0) {
+                try {
+                    expect(frameEle).toBeTruthy()
+                    await this.wait('minWait')
+                    const ele = frameEle.locator(locator);
+                    await expect(ele).toBeVisible()
+                    this.wait('minWait')
+                    await ele.hover();
+                    await ele.click();
+                    console.log(`Ele visible`);
+                } catch (error) {
+                    console.log("Frame not found" + error)
+                }
+            }
         })
     }
 
-    async getbyroleGroup(roletype1: any, roletype2: any, filterName: string, roletype1Text: string, roletype2Text: string): Promise<void>{
-        test.step(`The ${roletype1} ${roletype2} is group`, async()=>{
-            await this.page.getByRole(roletype1, {"name": roletype1Text}).filter({hasText: filterName}).getByRole(roletype2, {name: roletype2Text}).click();
+
+    async typeinFrame(flocator: string, locator: string, name: string, data: string) {
+        await test.step(`Textbox ${name} filled with data: ${data}`, async () => {
+            const frameLocator = this.page.frameLocator(flocator);
+            const elementCount = await frameLocator.locator(locator).count();
+            if (elementCount > 0) {
+                await this.page.frameLocator(flocator).locator(locator).clear();
+                await this.page.frameLocator(flocator).locator(locator).fill(data);
+                await this.page.keyboard.press("Enter");
+            } else {
+                await this.page.locator(locator).clear();
+                await this.page.locator(locator).fill(data);
+                await this.page.keyboard.press("Enter");
+            }
+        });
+    }
+
+    async mouseHoverandClick(hoverLocator: string, clickLocator: string, Menu: string, name: string) {
+        await test.step(`The ${Menu} ${name} clicked`, async () => {
+            await this.page.hover(hoverLocator);
+            await this.page.click(clickLocator);
+
         })
     }
 
-    async getbyroleTitleText(nametext: string){
-        test.step(`The ${nametext} is click`, async()=>{            
-            await this.page.getByTitle(nametext, {exact: true}).click({force:true});  
+    async selectDropdown(selector: string, options: { value?: string; index?: number; label?: string }) {
+        await test.step(`Selecting from dropdown using ${JSON.stringify(options)}`, async () => {
+            const dropdown = await this.page.locator(selector);
+
+            if (options.value) {
+                await dropdown.selectOption({ value: options.value });
+                console.log(`Selected by value: ${options.value}`);
+            } else if (options.index !== undefined) {
+                await dropdown.selectOption({ index: options.index });
+                console.log(`Selected by index: ${options.index}`);
+            } else if (options.label) {
+                await dropdown.selectOption({ label: options.label });
+                console.log(`Selected by label: ${options.label}`);
+            } else {
+                throw new Error('No valid option provided. Please specify value, index, or label.');
+            }
+        });
+    }
+
+    async mouseHover(hoverLocator: string, Menu: string) {
+        await test.step(`The pointer hovers over the ${Menu} element.  `, async () => {
+            await this.page.hover(hoverLocator);
         })
     }
 
-    async getbyroleLocatorButton(Locator: string, nametext: string){
-        test.step(`The ${nametext} is click`, async()=>{            
-            await this.page.locator(Locator).getByRole('button', {name: nametext, exact: true}).click({force:true});
+    async draganddrop(sourceLocator: string, targetLocator: string) {
+        await test.step(`The sourceElement dragged  to targetElement Succesfully`, async () => {
+            const sourceElement = this.page.locator(sourceLocator);
+            const targetElement = this.page.locator(targetLocator);
+            await sourceElement.dragTo(targetElement);
         })
     }
+
+    async keyboardAction(locator: string, keyAction: string, Menu: string, name: string) {
+        await test.step(`The ${Menu} ${name} Entered`, async () => {
+            await this.page.focus(locator)
+            await this.page.keyboard.press(keyAction)
+        })
+    }
+
+    async doubleClick(locator: string, name: string) {
+        await test.step(`The ${name} clicked`, async () => {
+            await this.page.locator(locator).click({ force: true })
+            await this.page.locator(locator).click({ force: true })
+        })
+    }
+
+    async verification(locator: string, expectedTextSubstring: string) {
+        const element = this.page.locator(locator).nth(0);
+        const text = await element.innerText();
+        console.log(text);
+        const lowerCaseText = text.toLowerCase();
+        const lowerCaseExpected = expectedTextSubstring.toLowerCase();
+        expect(lowerCaseText).toContain(lowerCaseExpected);
+    }
+
+
+    async waitForElementHidden(locator: string, type: string) {
+        try {
+            await this.wait('minWait')
+            await this.page.waitForSelector(locator, { state: 'hidden', timeout: 20000 });
+            console.log(`Element with XPath "${type}" is hidden as expected.`);
+        } catch (error) {
+            console.error(`Element with XPath "${type}" is still visible.`);
+        }
+    }
+
+
+    async validateElementVisibility(locator: any, elementName: string) {
+        try {
+            const element = this.page.locator(locator);
+            await this.page.waitForSelector(locator, { state: 'attached', timeout: 30000, strict: true });
+            if (await element.isVisible()) {
+                console.log(`${elementName} is visible as expected.`);
+            } else {
+                console.error(`${elementName} is not visible.`);
+            }
+        } catch (error) {
+            console.error(`Error validating visibility of ${elementName}: ${error}`);
+        }
+    }
+
+
+    async uploadMultipleContent(fileName1: string, fileName2: string, locator: any) {
+        const inputElementHandle = this.page.locator(locator)
+        if (inputElementHandle) {
+            await inputElementHandle.setInputFiles([path.resolve(__dirname, fileName1),
+            path.resolve(__dirname, fileName2)])
+        } else {
+            console.error('Input element not found');
+        }
+    }
+
+    async samplefile(locator: string, Path: string,) {
+        const filePath = path.resolve(__dirname, Path);
+        const inputElementHandle = this.page.locator(locator);
+        const binaryFormat = fs.readFileSync(filePath, { encoding: 'binary' });
+        if (inputElementHandle) {
+            await inputElementHandle.setInputFiles(binaryFormat);
+        } else {
+            console.error('Input element not found');
+        }
+        await this.wait('maxWait');
+    }
+
+    async uploadFile(locator: string, Path: string,) {
+        const filePath = path.resolve(__dirname, Path);
+        const inputElementHandle = this.page.locator(locator);
+        if (inputElementHandle) {
+            await inputElementHandle.setInputFiles(filePath);
+        } else {
+            console.error('Input element not found');
+        }
+        await this.wait('maxWait');
+    }
+
+    /**
+    * Waits for a specified duration based on the wait type provided.
+    * 
+    * @param {'minWait' | 'mediumWait' | 'maxWait'} waitType - The type of wait duration ('minWait', 'mediumWait', or 'maxWait').
+    */
+    async wait(waitType: 'minWait' | 'mediumWait' | 'maxWait') {
+        try {
+            switch (waitType) {
+                case 'minWait':
+                    await this.page.waitForTimeout(3000);
+                    break;
+                case 'mediumWait':
+                    await this.page.waitForTimeout(5000);
+                    break;
+                case 'maxWait':
+                    await this.page.waitForTimeout(10000);
+                    break;
+                default:
+                    console.log("Invalid wait type provided.");
+                    throw new Error(`Invalid wait type: ${waitType}`);
+            }
+        } catch (error) {
+            console.error("Error during wait:", error);
+        }
+    }
+
+
+    async spinnerDisappear(element: string): Promise<void> {
+        await this.wait('minWait');
+        const spinner = this.page.locator(element);
+        const spinnerCount = await spinner.count();
+
+        if (spinnerCount === 0) {
+            console.log('No spinner found on this page. Continuing.');
+            return;
+        }
+
+        try {
+            await spinner.waitFor({ state: 'hidden', timeout: 15000 });
+            console.log('expected element is disabled');
+        } catch {
+            console.log('Spinner did not disappear within timeout; continuing without failing the test.');
+        }
+    }
+
+    async typeText(locator: string, name: string, data: Promise<string | null>) {
+        const resolvedData = await data;
+        await test.step(`Textbox ${name} filled with data: ${resolvedData}`, async () => {
+            if (resolvedData !== null) {
+                await this.page.locator(locator).fill(resolvedData);
+            } else {
+                throw new Error(`Cannot fill textbox ${name} with null data`);
+            }
+        });
+    }
+
+    async isCheckboxClicked(locator: string, name: string) {
+        await test.step(`Checkbox ${name} is selected`, async () => {
+            await this.page.focus(locator);
+            await this.page.check(locator, { force: true });
+            let value = await this.page.isChecked(locator);
+            if (value == false) {
+                console.log("The CheckBox is not Clicked");
+            }
+
+        })
+    }
+
+    async handleAxisCoordinateClick(x_axis: number, y_axis: number) {
+        await test.step(`The X-axis at ${x_axis} and ${y_axis} at 234 were clicked successfully.`, async () => {
+            await this.wait('minWait');
+            await this.page.mouse.click(x_axis, y_axis, { delay: 300 });
+            await this.wait('minWait');
+        })
+
+    }
+
+    async radioButton(locator: string, name: string) {
+        await test.step(`Checkbox ${name} is selected`, async () => {
+
+            if (!await this.page.isChecked(locator)) {
+                await this.page.focus(locator)
+                await this.page.check(locator, { force: true });
+            } else {
+                console.log("The button is already checked")
+            }
+        })
+    }
+
+    async childTab(locator: string): Promise<void> {
+
+        [PlaywrightWrapper.newPage] = await Promise.all([
+            this.context.waitForEvent('page'),
+            this.page.locator(locator).click()
+        ]);
+
+        this.page = (await this.context.pages())[this.context.pages().length - 1];
+    }
+
+    switchToParentPage(): void {
+        const pages = this.context.pages();
+        if (pages.length > 0) {
+            this.page = pages[0];
+            this.page.bringToFront();
+        } else {
+            throw new Error('Parent page is not available');
+        }
+    }
+
+    switchToChildPage(index: number): void {
+        const pages = this.context.pages();
+        if (pages.length > index) {
+            this.page = pages[index];
+            this.page.bringToFront();
+        } else {
+            throw new Error('Page at the specified index is not available');
+        }
+    }
+    getById(locator: string): Locator {
+        return this.page.locator(`#${locator}`)
+    }
+    getByClass(locator: string): Locator {
+        return this.page.locator(`[class='${locator}']`)
+    }
+
+    /**
+ * Interacts with a web element based on the given attribute and action.
+ *
+ * @param {string} attribute - The type of locator to use ("LABEL", "PLACEHOLDER", "TEXT", "TITLE", "ALTTEXT", "ID", "CLASS").
+ * @param {string} locator - The value of the locator to find the element.
+ * @param {string} action - The action to perform on the element ("click" or "fill").
+ * @param {string} [data] - The data to input if the action is "fill" (optional).
+ * @throws {Error} Throws an error if an unsupported attribute or action is used.
+ */
+    async interactWithElement(
+        attribute: "LABEL" | "PLACEHOLDER" | "TEXT" | "TITLE" | "ALTTEXT" | "ID" | "CLASS",
+        locator: string,
+        action: "click" | "fill",
+        data: string = ""
+    ): Promise<void> {
+        if (!locator) {
+            throw new Error("Locator must be provided.");
+        }
+
+        if (action === "fill" && !data) {
+            throw new Error("Data must be provided for the 'fill' action.");
+        }
+
+        switch (attribute) {
+            case "LABEL":
+                if (action === "click") {
+                    await this.page.getByLabel(locator).click();
+                } else {
+                    await this.page.getByLabel(locator).fill(data);
+                }
+                break;
+
+            case "PLACEHOLDER":
+                if (action === "click") {
+                    await this.page.getByPlaceholder(locator).click();
+                } else {
+                    await this.page.getByPlaceholder(locator).fill(data);
+                }
+                break;
+
+            case "TEXT":
+                if (action === "click") {
+                    await this.page.getByText(locator).click();
+                } else {
+                    throw new Error("The 'fill' action is not supported for 'TEXT' attributes.");
+                }
+                break;
+
+            case "TITLE":
+                if (action === "click") {
+                    await this.page.getByTitle(locator).click();
+                } else {
+                    throw new Error("The 'fill' action is not supported for 'TITLE' attributes.");
+                }
+                break;
+
+            case "ALTTEXT":
+                if (action === "click") {
+                    await this.page.getByAltText(locator).click();
+                } else {
+                    throw new Error("The 'fill' action is not supported for 'ALTTEXT' attributes.");
+                }
+                break;
+
+            case "ID":
+                const idSelector = `#${locator}`;
+                if (action === "click") {
+                    await this.page.locator(idSelector).click();
+                } else {
+                    await this.page.locator(idSelector).fill(data);
+                }
+                break;
+
+            case "CLASS":
+                const classSelector = `.${locator}`;
+                if (action === "click") {
+                    await this.page.locator(classSelector).click();
+                } else {
+                    await this.page.locator(classSelector).fill(data);
+                }
+                break;
+
+            default:
+                throw new Error(`Unsupported attribute: ${attribute}`);
+        }
+    }
+
 
 }
+
