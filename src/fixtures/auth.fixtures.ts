@@ -73,15 +73,15 @@ export const test = base.extend<AuthFixtures>({
   },
 
   adminEditReviewPage: async ({ adminPage }, use) => {
-    await use(new EditReviewPage(adminPage));
+    await use(new EditReviewPage(adminPage, adminPage.context()));
   },
 
   translatorEditReviewPage: async ({ translatorPage }, use) => {
-    await use(new EditReviewPage(translatorPage));
+    await use(new EditReviewPage(translatorPage, translatorPage.context()));
   },
 
   reviewerEditReviewPage: async ({ reviewerPage }, use) => {
-    await use(new EditReviewPage(reviewerPage));
+    await use(new EditReviewPage(reviewerPage, reviewerPage.context()));
   },
 });
 

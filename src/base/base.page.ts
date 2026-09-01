@@ -32,13 +32,9 @@ export abstract class PlaywrightWrapper {
    */
     async type(locator: string, name: string, data: string) {
         await test.step(`Textbox ${name} filled with data: ${data}`, async () => {
-
-
             await this.page.locator(locator).clear();
             await this.page.locator(locator).fill(data);
-
-        }
-        )
+            })
     }
 
 
@@ -573,15 +569,15 @@ export abstract class PlaywrightWrapper {
         return this.page.locator(`[class='${locator}']`)
     }
 
-    /**
- * Interacts with a web element based on the given attribute and action.
- *
- * @param {string} attribute - The type of locator to use ("LABEL", "PLACEHOLDER", "TEXT", "TITLE", "ALTTEXT", "ID", "CLASS").
- * @param {string} locator - The value of the locator to find the element.
- * @param {string} action - The action to perform on the element ("click" or "fill").
- * @param {string} [data] - The data to input if the action is "fill" (optional).
- * @throws {Error} Throws an error if an unsupported attribute or action is used.
- */
+/**
+* Interacts with a web element based on the given attribute and action.
+*
+* @param {string} attribute - The type of locator to use ("LABEL", "PLACEHOLDER", "TEXT", "TITLE", "ALTTEXT", "ID", "CLASS").
+* @param {string} locator - The value of the locator to find the element.
+* @param {string} action - The action to perform on the element ("click" or "fill").
+* @param {string} [data] - The data to input if the action is "fill" (optional).
+* @throws {Error} Throws an error if an unsupported attribute or action is used.
+*/
     async interactWithElement(
         attribute: "LABEL" | "PLACEHOLDER" | "TEXT" | "TITLE" | "ALTTEXT" | "ID" | "CLASS",
         locator: string,
@@ -660,6 +656,113 @@ export abstract class PlaywrightWrapper {
         }
     }
 
+/**
+* Interacts with a web element located via ARIA role and accessible name.
+*
+* @param {string} role - The ARIA role of the element ("button", "link", "textbox", "checkbox", "radio", "heading", "img", "banner", "list", "listitem", "navigation", "contentinfo", "main", "complementary").
+* @param {string} accessibleName - The accessible name (visible text/label) used to match the element.
+* @param {string} action - The action to perform ("click", "fill", "check", "uncheck", or "verify").
+* @param {string} [data] - The data to input if the action is "fill" (optional).
+* @param {number} [index] - The index to use when multiple elements match the role/name (defaults to 0).
+* @throws {Error} Throws an error if an unsupported role/action combination is used.
+*/
+    async interactWithRole(
+        role: "button" | "link" | "textbox" | "checkbox" | "radio" | "heading"
+            | "img" | "banner" | "list" | "listitem" | "navigation" | "contentinfo" | "main" | "complementary",
+        accessibleName: string,
+        action: "click" | "fill" | "check" | "uncheck" | "verify",
+        data: string = "",
+        index: number = 0
+    ): Promise<void> {
+        if (!accessibleName) {
+            throw new Error("Accessible name must be provided.");
+        }
+
+        if (action === "fill" && !data) {
+            throw new Error("Data must be provided for the 'fill' action.");
+        }
+
+        const element = this.page.getByRole(role, { name: accessibleName }).nth(index);
+
+        switch (role) {
+            case "button":
+            case "link":
+                if (action !== "click") {
+                    throw new Error(`The '${action}' action is not supported for role '${role}'.`);
+                }
+                await element.click();
+                break;
+
+            case "textbox":
+                if (action === "click") {
+                    await element.click();
+                } else if (action === "fill") {
+                    await element.clear();
+                    await element.fill(data);
+                } else {
+                    throw new Error(`The '${action}' action is not supported for role '${role}'.`);
+                }
+                break;
+
+            case "checkbox":
+            case "radio":
+                if (action === "check") {
+                    await element.check({ force: true });
+                } else if (action === "uncheck") {
+                    await element.uncheck({ force: true });
+                } else if (action === "click") {
+                    await element.click();
+                } else {
+                    throw new Error(`The '${action}' action is not supported for role '${role}'.`);
+                }
+                break;
+
+            case "heading":
+                if (action !== "verify") {
+                    throw new Error(`The '${action}' action is not supported for role '${role}'.`);
+                }
+                await expect(element).toBeVisible();
+                break;
+
+            case "img":
+                if (action === "click") {
+                    await element.click();
+                } else if (action === "verify") {
+                    await expect(element).toBeVisible();
+                } else {
+                    throw new Error(`The '${action}' action is not supported for role '${role}'.`);
+                }
+                break;
+
+            case "listitem":
+                if (action === "click") {
+                    await element.click();
+                } else if (action === "verify") {
+                    await expect(element).toBeVisible();
+                } else {
+                    throw new Error(`The '${action}' action is not supported for role '${role}'.`);
+                }
+                break;
+
+            case "list":
+            case "navigation":
+            case "banner":
+            case "contentinfo":
+            case "main":
+            case "complementary":
+                if (action !== "verify") {
+                    throw new Error(`The '${action}' action is not supported for role '${role}'.`);
+                }
+                await expect(element).toBeVisible();
+                break;
+
+            default:
+                throw new Error(`Unsupported role: ${role}`);
+        }
+    }
+
 
 }
+
+
 
