@@ -2,7 +2,7 @@ import { chromium, FullConfig } from '@playwright/test';
 import { LoginUsers } from '../../src/pages/loginSF_Users'; 
 import * as fs from 'fs';
 import * as path from 'path';
-import { clearFrameworkLog, createLogger, serializeError } from '../../src/utils/logger/logger';
+import { clearFrameworkLog, createLogger, pruneOldLogs, serializeError } from '../../src/utils/logger/logger';
 
 const log = createLogger('global-setup');
 
@@ -246,6 +246,7 @@ async function loginUser(
 
 async function globalSetup(_config: FullConfig): Promise<void> {
   clearFrameworkLog();
+  pruneOldLogs();
   log.info('Global authentication setup started');
   log.debug('Global setup configuration', {
     baseUrl: baseurl,

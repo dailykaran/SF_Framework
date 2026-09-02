@@ -24,8 +24,12 @@ const reporters: ReporterDescription[] = [
     detail: true,
     suiteTitle: true
   }],
-  ['./src/utils/logger/playwright-logger-reporter.ts'],
 ];
+
+// Set LOGGING_ENABLED=false to disable the custom Winston-backed reporter for this run.
+if (process.env.LOGGING_ENABLED?.toLowerCase() !== 'false') {
+  reporters.push(['./src/utils/logger/playwright-logger-reporter.ts']);
+}
 
 export default defineConfig({
   testDir: './tests',

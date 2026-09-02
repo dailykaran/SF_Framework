@@ -2,7 +2,7 @@ import { test as base, expect, type Page } from '@playwright/test';
 import * as path from 'path';
 import * as fs from 'fs';
 import { EditReviewPage } from '../pages/editReview';
-import { createLogger, getSpecLogFilePath, serializeError, writeLog } from '../utils/logger/logger';
+import { createLogger, getSpecLogFilePath, releaseLogger, serializeError, writeLog } from '../utils/logger/logger';
 import type winston from 'winston';
 
 /**
@@ -93,6 +93,7 @@ export const test = base.extend<AuthFixtures>({
         });
       }
       await writeLog(testLogger, 'info', 'Test finished', { status: testInfo.status });
+      releaseLogger(testLogger);
 
       if (testInfo.status !== testInfo.expectedStatus) {
         if (fs.existsSync(logFile)) {

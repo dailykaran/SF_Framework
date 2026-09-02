@@ -9,7 +9,7 @@ test('Verify translator user with project page', async ({ translatorPage }) => {
     await translatorPage.waitForLoadState('networkidle');
     await translatorPage.getByText('Edit & review').click();
     await translatorPage.waitForURL('**/translate/**');
-    await expect(translatorPage).toHaveURL(/\/translates\//);
+    await expect(translatorPage).toHaveURL(/\/translate\//);
     await expect(translatorPage.getByRole('link', { name: /admin settings/i })).not.toBeVisible();
 });
  

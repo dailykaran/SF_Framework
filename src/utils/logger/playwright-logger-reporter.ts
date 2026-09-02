@@ -1,6 +1,6 @@
 import type { Reporter, TestCase, TestResult } from '@playwright/test/reporter';
 import * as path from 'path';
-import { createLogger, getSpecLogFilePath, serializeError, writeLog } from './logger';
+import { createLogger, getSpecLogFilePath, releaseLogger, serializeError, writeLog } from './logger';
 
 export default class PlaywrightLoggerReporter implements Reporter {
   onTestBegin(test: TestCase): void {
@@ -24,6 +24,7 @@ export default class PlaywrightLoggerReporter implements Reporter {
         errors,
       });
     }
+    releaseLogger(log);
   }
 
   private getTestLogger(test: TestCase) {
