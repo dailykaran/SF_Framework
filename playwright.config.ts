@@ -1,6 +1,9 @@
 /// <reference types="node" />
 import 'dotenv/config';
 import { defineConfig, devices, ReporterDescription } from '@playwright/test';
+import { formatIstTimestamp } from './src/utils/logger/logger';
+
+process.env.PLAYWRIGHT_RUN_ID ??= formatIstTimestamp(true).replace(/[: ]/g, '-');
 
 /**
  * Auth flow:
@@ -23,6 +26,11 @@ const reporters: ReporterDescription[] = [
     suiteTitle: true
   }],
 ];
+
+// Set LOGGING_ENABLED=false to disable the custom Winston-backed reporter for this run.
+if (process.env.LOGGING_ENABLED?.toLowerCase() !== 'false') {
+  reporters.push(['./src/utils/logger/playwright-logger-reporter.ts']);
+}
 
 export default defineConfig({
   testDir: './tests',
