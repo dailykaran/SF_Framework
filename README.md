@@ -2,7 +2,7 @@
 
 A TypeScript and Playwright test automation framework for Scripture Forge QA at `qa.scriptureforge.org`.
 
-The framework is currently in partial development. It provides role-based authentication, reusable page objects and fixtures, Faker-based test data, synthetic scripture references and question/answer data, and Playwright and Allure reporting. Coverage is currently focused on login and the translator Edit & Review smoke flow.
+The framework is currently in partial development. It provides role-based authentication, reusable page objects and fixtures, Faker-based test data, synthetic scripture references and question/answer data, structured Winston logging, and Playwright and Allure reporting. Coverage is currently focused on login and the translator Edit & Review smoke flow.
 
 ## Technology Stack
 
@@ -12,6 +12,7 @@ The framework is currently in partial development. It provides role-based authen
 - `@faker-js/faker`
 - `allure-playwright`
 - `allure-commandline`
+- `winston`
 - dotenv
 
 ## Prerequisites
@@ -58,17 +59,23 @@ Do not commit `.env`, credentials, or `.auth` session files. They are excluded b
 │   └── environments/
 │       └── qa.ts                 # Reserved for QA environment configuration
 ├── src/
+│   ├── base/
+│   │   └── base.page.ts          # Shared page-object behavior
 │   ├── fixtures/
 │   │   └── auth.fixtures.ts      # Authenticated pages and page-object fixtures
+│   ├── locators/
+│   │   └── selectors.ts          # Shared selectors
 │   ├── pages/
-│   │   ├── editReview.ts         # Translator Edit & Review page object
-│   │   └── loginSF_Users.ts      # Admin, translator, reviewer, and CC login flows
+│   │   ├── Edit_Review/editReview.ts
+│   │   └── login/loginSF_Users.ts
+│   ├── test_data/constants/
+│   │   ├── asserts.ts            # Assertion and route constants
+│   │   └── inputs.ts             # Reusable test inputs
 │   └── utils/
-│       └── data/
-│           ├── commonDataGenerator.ts
-│           ├── scripture.data.ts
-│           ├── scriptureGenerator.ts
-│           └── index.ts          # Shared data-generator exports
+│       ├── data/                 # Faker and synthetic scripture data
+│       ├── JSONFilesHandler/     # JSON read and update helpers
+│       ├── logger/               # Winston logger and Playwright reporter
+│       └── waits/                # Smart-wait helpers
 ├── tests/
 │   ├── data/
 │   │   └── scripture_generator.spec.ts
@@ -84,6 +91,7 @@ Do not commit `.env`, credentials, or `.auth` session files. They are excluded b
 ├── reports/
 │   ├── allure-report/            # Generated Allure HTML report
 │   ├── allure-results/           # Allure raw result files
+│   ├── logs/                     # Run and per-spec log files
 │   └── playwright-report/        # Generated Playwright HTML report
 ├── playwright.config.ts
 ├── package.json
@@ -106,6 +114,8 @@ Before the test run, `tests/global_auth/global-setup.ts`:
 3. Validates cookie, Auth0 cache, and JWT expiry values.
 4. Reuses a valid session or performs a fresh login when the session is expired.
 5. Stores the authenticated browser state in `.auth/`.
+
+The `PLAYWRIGHT_ROLE` environment variable can limit global setup to one role. This is used by CI for the `cc_checker` role. When no role is specified, the configured role sessions are prepared for the browser projects.
 
 The test fixtures use these storage-state files to create authenticated Playwright pages. The current global setup performs live authentication against the QA environment when session files are missing or expired.
 
@@ -141,7 +151,13 @@ Run with the Playwright UI mode:
 npx playwright test --ui
 ```
 
-The configured browser mode is headed (`headless: false`). To run headless for a local command, use the Playwright CLI option or create a separate configuration/profile for CI.
+Local runs are headed by default. CI runs headless automatically because `headless` is enabled when `CI` is set. The configuration also enables a 120-second test timeout, a 15-second assertion timeout, and one retry in CI.
+
+To disable the custom Winston-backed reporter for a run, set `LOGGING_ENABLED=false`.
+
+### CI
+
+The GitHub Actions workflow runs on pushes and pull requests targeting `main` or `master`. It currently runs the CC Checker login test with the `chrome-cc-checker` project, generates the Allure report, and uploads the Playwright report, Allure results, and generated Allure report as an artifact retained for 30 days. Configure `BASE_URL`, `SF_CC_CHECKER_EMAIL`, and `SF_CC_CHECKER_PASSWORD` as repository secrets.
 
 ## Shared Data Utilities
 
@@ -188,14 +204,17 @@ Available scripture functions include:
 
 ## Reports
 
-Each test run produces Playwright HTML output and Allure raw results:
+Each test run produces Playwright HTML output, Allure raw results, and structured logs:
 
 ```text
 reports/
 ├── playwright-report/
 ├── allure-results/
-└── allure-report/
+├── allure-report/
+└── logs/
 ```
+
+The custom reporter writes run-level and per-spec log files under `reports/logs/<date>/`. Test code can also create a named logger and write structured events to the current spec log through the helpers in `src/utils/logger/logger.ts`.
 
 Generate the Allure HTML report:
 
@@ -231,12 +250,16 @@ Implemented:
 - Cached authenticated browser sessions
 - Session expiry validation and automatic re-login
 - Reusable authentication fixtures
+- Shared base page, selectors, waits, JSON helpers, and test constants
 - Paratext/Google login flow for admin, translator, and reviewer
 - Direct login flow for the CC Checker
 - Basic admin project navigation test
+- CC Checker project navigation and permission test
 - Translator Edit & Review smoke test
 - Shared Faker data utilities
 - Synthetic scripture references, verse-like text, and question/answer data
+- Winston-backed run and per-spec logging
+- GitHub Actions workflow for the CC Checker smoke test
 - Playwright and Allure report generation
 
 Partial or planned:
@@ -246,7 +269,8 @@ Partial or planned:
 - Translation, review, comments, approvals, and other business workflows are not yet automated.
 - Project name `- 03F` is currently hard-coded in the smoke tests.
 - `package.json` does not yet contain a general `test` script; commands currently use `npx playwright test`.
-- CI workflow and test-data lifecycle management are not yet complete.
+- The CI workflow currently covers only the CC Checker smoke test; broader role coverage is not yet enabled.
+- Test-data lifecycle management is not yet complete.
 
 ## Development Guidelines
 
@@ -254,6 +278,7 @@ Partial or planned:
 - Do not commit `.auth`, `reports`, `test-results`, or other generated artifacts.
 - Prefer page objects for UI interaction and fixtures for authenticated roles.
 - Import shared data through `src/utils/data/index.ts`.
+- Use the shared constants, selectors, waits, JSON helpers, and logger utilities when extending tests.
 - Keep synthetic test data deterministic when debugging by calling `seedScripture(seed)`.
 - Add focused tests when extending a page object or data generator.
 
@@ -278,6 +303,10 @@ npm run allure:open
 ```
 
 Use `reports/allure-report`, not a root-level `allure-report` path.
+
+### Logging
+
+Logs are written under `reports/logs/` during a run. Set `LOGGING_ENABLED=false` when troubleshooting without the custom logger reporter. The reporter is enabled by default.
 
 ### QA login fails
 
