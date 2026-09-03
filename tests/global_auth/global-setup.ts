@@ -1,5 +1,5 @@
 import { chromium, FullConfig } from '@playwright/test';
-import { LoginUsers } from '../../src/pages/loginSF_Users'; 
+import { LoginUsers } from '../../src/pages/login/loginSF_Users'; 
 import * as fs from 'fs';
 import * as path from 'path';
 import { clearFrameworkLog, createLogger, pruneOldLogs, serializeError } from '../../src/utils/logger/logger';
@@ -255,7 +255,7 @@ async function globalSetup(_config: FullConfig): Promise<void> {
   });
   fs.mkdirSync(AUTH_DIR, { recursive: true });
 
-  const browser = await chromium.launch({ headless: true, args: ['--no-sandbox']});
+  const browser = await chromium.launch({ headless: false, args: ['--no-sandbox']});
 
   try {
     const selectedRole = process.env.PLAYWRIGHT_ROLE;

@@ -6,9 +6,27 @@ import winston from 'winston';
 const { combine, timestamp, colorize, printf, splat } = winston.format;
 const loggingEnabled = process.env.LOGGING_ENABLED?.toLowerCase() !== 'false';
 const LOG_ROOT = path.resolve('reports', 'logs');
-const date = new Date().toISOString().slice(0, 10);
+const IST_TIME_ZONE = 'Asia/Kolkata';
+
+/** Formats the current time in IST so logs are consistent across local and CI machines. */
+export function formatIstTimestamp(withDate: boolean): string {
+    const parts = new Intl.DateTimeFormat('en-GB', {
+        timeZone: IST_TIME_ZONE,
+        year: 'numeric', month: '2-digit', day: '2-digit',
+        hour: '2-digit', minute: '2-digit', second: '2-digit',
+        hour12: false,
+    }).formatToParts(new Date());
+    const get = (type: string): string => parts.find(part => part.type === type)?.value ?? '';
+    const time = `${get('hour')}:${get('minute')}:${get('second')}`;
+    return withDate ? `${get('year')}-${get('month')}-${get('day')} ${time} IST` : time;
+}
+
+const date = formatIstTimestamp(true).slice(0, 10);
 const logDirectory = path.join(LOG_ROOT, date);
-const RUN_ID = process.env.PLAYWRIGHT_RUN_ID ?? new Date().toISOString().replace(/[:.]/g, '-');
+
+
+// filename-safe: strip spaces/colons that formatIstTimestamp uses for readability
+const RUN_ID = process.env.PLAYWRIGHT_RUN_ID ?? formatIstTimestamp(true).replace(/[: ]/g, '-');
 const FRAMEWORK_LOG_FILE = path.join(logDirectory, 'framework.log');
 const MAX_SEED_BYTES = 256 * 1024;
 // single source of truth so the key-matcher and value-matcher below can't drift apart
@@ -21,20 +39,6 @@ const ansiEscapePattern = /\u001b\[[0-?]*[ -\/]*[@-~]/g;
 const controlCharPattern = /[\u0000-\u0008\u000B\u000C\u000E-\u001F\u007F]/g;
 const writeMarker = Symbol('writeLogMarker');
 const WRITE_TIMEOUT_MS = 10_000;
-const IST_TIME_ZONE = 'Asia/Kolkata';
-
-/** Formats the current time in IST so logs are consistent across local and CI machines. */
-function formatIstTimestamp(withDate: boolean): string {
-    const parts = new Intl.DateTimeFormat('en-GB', {
-        timeZone: IST_TIME_ZONE,
-        year: 'numeric', month: '2-digit', day: '2-digit',
-        hour: '2-digit', minute: '2-digit', second: '2-digit',
-        hour12: false,
-    }).formatToParts(new Date());
-    const get = (type: string): string => parts.find(part => part.type === type)?.value ?? '';
-    const time = `${get('hour')}:${get('minute')}:${get('second')}`;
-    return withDate ? `${get('year')}-${get('month')}-${get('day')} ${time} IST` : time;
-}
 
 /** Ensures the parent directory exists before Winston or file helpers use a log path. */
 function ensureLogDirectory(logFile: string): void {

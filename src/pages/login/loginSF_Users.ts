@@ -1,6 +1,6 @@
 import { Page, expect } from '@playwright/test';
 import process from 'process';
-import { createLogger } from '../utils/logger/logger';
+import { createLogger } from '../../utils/logger/logger';
 
 const log = createLogger('LoginUsers');
 

@@ -1,8 +1,9 @@
 /// <reference types="node" />
 import 'dotenv/config';
 import { defineConfig, devices, ReporterDescription } from '@playwright/test';
+import { formatIstTimestamp } from './src/utils/logger/logger';
 
-process.env.PLAYWRIGHT_RUN_ID ??= new Date().toISOString().replace(/[:.]/g, '-');
+process.env.PLAYWRIGHT_RUN_ID ??= formatIstTimestamp(true).replace(/[: ]/g, '-');
 
 /**
  * Auth flow:

@@ -1,9 +1,9 @@
 import { test as base, expect, type Page } from '@playwright/test';
 import * as path from 'path';
 import * as fs from 'fs';
-import { EditReviewPage } from '../pages/editReview';
 import { createLogger, getSpecLogFilePath, releaseLogger, serializeError, writeLog } from '../utils/logger/logger';
 import type winston from 'winston';
+import { EditReviewPage } from '../pages/Edit_Review/editReview';
 
 /**
  * Auth fixtures — use these when a single test needs to act as
@@ -131,15 +131,15 @@ export const test = base.extend<AuthFixtures>({
   },
 
   adminEditReviewPage: async ({ adminPage, logger }, use) => {
-    await use(new EditReviewPage(adminPage, logger));
+    await use(new EditReviewPage(adminPage, adminPage.context(), logger));
   },
 
   translatorEditReviewPage: async ({ translatorPage, logger }, use) => {
-    await use(new EditReviewPage(translatorPage, logger));
+    await use(new EditReviewPage(translatorPage,  translatorPage.context(), logger));
   },
 
   reviewerEditReviewPage: async ({ reviewerPage, logger }, use) => {
-    await use(new EditReviewPage(reviewerPage, logger));
+    await use(new EditReviewPage(reviewerPage, reviewerPage.context(), logger));
   },
 });
 
