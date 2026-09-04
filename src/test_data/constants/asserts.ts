@@ -10,7 +10,10 @@ export const Asserts = {
   EDIT_REVIEW: {
     NAVIGATION_URL: 'translate',
   },
-
+  // Checking page
+  CHECKING: {
+    NAVIGATION_URL: 'checking',
+  },
   // Overview page
   OVERVIEW: {
 

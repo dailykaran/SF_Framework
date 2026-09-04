@@ -1,5 +1,4 @@
 import {  type Page, BrowserContext, Locator, test } from '@playwright/test';
-import { createLogger } from '../../utils/logger/logger';
 import type winston from 'winston';
 
 import { PlaywrightWrapper } from '../../base/base.page';
@@ -10,12 +9,10 @@ import { Selectors } from '../../locators/selectors';
 
 export class EditReviewPage extends PlaywrightWrapper {
   private readonly smartWait: SmartWait;
-  private readonly logger: winston.Logger;
-  
+
   constructor(page: Page, context: BrowserContext, logger: winston.Logger) {
-    super(page, context);
+    super(page, context, logger);
     this.smartWait = new SmartWait(this.page);
-    this.logger = logger;
   }
 
   async open(projectName: string): Promise<void> {

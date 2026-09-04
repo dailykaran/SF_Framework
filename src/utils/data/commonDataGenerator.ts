@@ -1,6 +1,6 @@
 import { faker } from "@faker-js/faker";
 
-export class FakerData {
+export class CommonFakerData {
 
     static getFirstName(): string {
         return faker.person.firstName();

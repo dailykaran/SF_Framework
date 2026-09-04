@@ -17,19 +17,20 @@ const AUTH_DIR = path.resolve('.auth');
 async function globalTeardown(): Promise<void> {
   const startOffset = getFrameworkLogSize();
   log.info('Global authentication teardown started');
-  await appendFrameworkLogToSpecLogs(log, startOffset);
-  if (!fs.existsSync(AUTH_DIR)) return;
+  
+/*   if (!fs.existsSync(AUTH_DIR)) return;
 
-/*   const files = fs
+   const files = fs
     .readdirSync(AUTH_DIR)
     .filter(f => f.endsWith('.json'));
 
   for (const file of files) {
     fs.rmSync(path.join(AUTH_DIR, file), { force: true });
     log.info('Removed session', { file });
-  }
-
-  log.info('Auth teardown complete'); */
+  } */
+  // End of session removal loop
+  log.info('Auth teardown complete');
+  await appendFrameworkLogToSpecLogs(log, startOffset);
 }
 
 export default globalTeardown;

@@ -2,24 +2,26 @@
 import { Page, test, expect, BrowserContext, Locator } from "@playwright/test";
 import * as path from 'path';
 import fs from 'fs';
-
+import type winston from 'winston';
 
 
 export abstract class PlaywrightWrapper {
 
     page: Page;
     readonly context: BrowserContext;
-    private static newPage: Page | null = null;
+    public logger: winston.Logger;
+    private newPage: Page | null = null;
 
     protected getNewPage(): Page {
-        if (!PlaywrightWrapper.newPage) {
+        if (!this.newPage) {
             throw new Error('New tab is not initialized. Did you forget to call childTab()?');
         }
-        return PlaywrightWrapper.newPage;
+        return this.newPage;
     }
-    constructor(page: Page, context: BrowserContext,) {
+    constructor(page: Page, context: BrowserContext, logger: winston.Logger) {
         this.page = page;
         this.context = context;
+        this.logger = logger;
     }
 
 
@@ -104,9 +106,9 @@ export abstract class PlaywrightWrapper {
     async storeState(path: string): Promise<void> {
         try {
             await this.context.storageState({ path });
-            console.log(`Storage state saved to: ${path}`);
+            this.logger.info(`Storage state saved to: ${path}`);
         } catch (error) {
-            console.error(`Failed to save storage state to: ${path}`, error);
+            this.logger.error(`Failed to save storage state to: ${path}`, error);
         }
     }
 
@@ -118,9 +120,9 @@ export abstract class PlaywrightWrapper {
     public async loadApplication(url: string) {
         try {
             await this.page.goto(url); // Increased timeout for 60 seconds
-            console.log(`Successfully loaded the URL: ${url}`);
+            this.logger.info(`Successfully loaded the URL: ${url}`);
         } catch (error) {
-            console.log(`Error loading the page at ${url}:`);
+            this.logger.error(`Error loading the page at ${url}:`);
             throw new Error(`Failed to load the page at ${url}`);
         }
     }
@@ -235,7 +237,7 @@ export abstract class PlaywrightWrapper {
                 return page;
             }
         }
-        console.log(`No page found with title: ${windowTitle}`);
+        this.logger.error(`No page found with title: ${windowTitle}`);
         return null;
     }
 
@@ -243,7 +245,7 @@ export abstract class PlaywrightWrapper {
         this.page.on("dialog", async (dialog) => {
             dialog.message()
             await dialog.accept(Data);
-            console.log('Dialog Message:', dialog.message());
+            this.logger.info('Dialog Message:', dialog.message());
         });
     }
 
@@ -273,10 +275,10 @@ export abstract class PlaywrightWrapper {
                 try {
                     const frameVisible = await frameEle.locator('body').isVisible({ timeout: 5000 });
                     expect(frameVisible).toBeTruthy();
-                    console.log("Frame element is visible");
+                    this.logger.info("Frame element is visible");
 
                 } catch (error) {
-                    console.error(error)
+                    this.logger.error(error)
                 }
             }
         });
@@ -292,12 +294,12 @@ export abstract class PlaywrightWrapper {
                     await this.wait('minWait')
                     const ele = frameEle.locator(locator);
                     await expect(ele).toBeVisible()
-                    this.wait('minWait')
+                    await this.wait('minWait')
                     await ele.hover();
                     await ele.click();
-                    console.log(`Ele visible`);
+                    this.logger.info(`Ele visible`);
                 } catch (error) {
-                    console.log("Frame not found" + error)
+                    this.logger.error("Frame not found" + error)
                 }
             }
         })
@@ -334,13 +336,13 @@ export abstract class PlaywrightWrapper {
 
             if (options.value) {
                 await dropdown.selectOption({ value: options.value });
-                console.log(`Selected by value: ${options.value}`);
+                this.logger.info(`Selected by value: ${options.value}`);
             } else if (options.index !== undefined) {
                 await dropdown.selectOption({ index: options.index });
-                console.log(`Selected by index: ${options.index}`);
+                this.logger.info(`Selected by index: ${options.index}`);
             } else if (options.label) {
                 await dropdown.selectOption({ label: options.label });
-                console.log(`Selected by label: ${options.label}`);
+                this.logger.info(`Selected by label: ${options.label}`);
             } else {
                 throw new Error('No valid option provided. Please specify value, index, or label.');
             }
@@ -370,15 +372,14 @@ export abstract class PlaywrightWrapper {
 
     async doubleClick(locator: string, name: string) {
         await test.step(`The ${name} clicked`, async () => {
-            await this.page.locator(locator).click({ force: true })
-            await this.page.locator(locator).click({ force: true })
+            await this.page.locator(locator).dblclick({ force: true })
         })
     }
 
     async verification(locator: string, expectedTextSubstring: string) {
         const element = this.page.locator(locator).nth(0);
         const text = await element.innerText();
-        console.log(text);
+        this.logger.info(text);
         const lowerCaseText = text.toLowerCase();
         const lowerCaseExpected = expectedTextSubstring.toLowerCase();
         expect(lowerCaseText).toContain(lowerCaseExpected);
@@ -389,9 +390,9 @@ export abstract class PlaywrightWrapper {
         try {
             await this.wait('minWait')
             await this.page.waitForSelector(locator, { state: 'hidden', timeout: 20000 });
-            console.log(`Element with XPath "${type}" is hidden as expected.`);
+            this.logger.info(`Element with XPath "${type}" is hidden as expected.`);
         } catch (error) {
-            console.error(`Element with XPath "${type}" is still visible.`);
+            this.logger.error(`Element with XPath "${type}" is still visible.`);
         }
     }
 
@@ -401,12 +402,13 @@ export abstract class PlaywrightWrapper {
             const element = this.page.locator(locator);
             await this.page.waitForSelector(locator, { state: 'attached', timeout: 30000, strict: true });
             if (await element.isVisible()) {
-                console.log(`${elementName} is visible as expected.`);
+                this.logger.info(`${elementName} is visible as expected.`);
+                await expect(element).toBeVisible();
             } else {
-                console.error(`${elementName} is not visible.`);
+                this.logger.error(`${elementName} is not visible.`);
             }
         } catch (error) {
-            console.error(`Error validating visibility of ${elementName}: ${error}`);
+            this.logger.error(`Error validating visibility of ${elementName}: ${error}`);
         }
     }
 
@@ -417,7 +419,7 @@ export abstract class PlaywrightWrapper {
             await inputElementHandle.setInputFiles([path.resolve(__dirname, fileName1),
             path.resolve(__dirname, fileName2)])
         } else {
-            console.error('Input element not found');
+            this.logger.error('Input element not found');
         }
     }
 
@@ -428,7 +430,7 @@ export abstract class PlaywrightWrapper {
         if (inputElementHandle) {
             await inputElementHandle.setInputFiles(binaryFormat);
         } else {
-            console.error('Input element not found');
+            this.logger.error('Input element not found');
         }
         await this.wait('maxWait');
     }
@@ -439,7 +441,7 @@ export abstract class PlaywrightWrapper {
         if (inputElementHandle) {
             await inputElementHandle.setInputFiles(filePath);
         } else {
-            console.error('Input element not found');
+            this.logger.error('Input element not found');
         }
         await this.wait('maxWait');
     }
@@ -462,11 +464,11 @@ export abstract class PlaywrightWrapper {
                     await this.page.waitForTimeout(10000);
                     break;
                 default:
-                    console.log("Invalid wait type provided.");
+                    this.logger.error("Invalid wait type provided.");
                     throw new Error(`Invalid wait type: ${waitType}`);
             }
         } catch (error) {
-            console.error("Error during wait:", error);
+            this.logger.error("Error during wait:", error);
         }
     }
 
@@ -477,15 +479,15 @@ export abstract class PlaywrightWrapper {
         const spinnerCount = await spinner.count();
 
         if (spinnerCount === 0) {
-            console.log('No spinner found on this page. Continuing.');
+            this.logger.info('No spinner found on this page. Continuing.');
             return;
         }
 
         try {
             await spinner.waitFor({ state: 'hidden', timeout: 15000 });
-            console.log('expected element is disabled');
+            this.logger.info('expected element is disabled');
         } catch {
-            console.log('Spinner did not disappear within timeout; continuing without failing the test.');
+            this.logger.error('Spinner did not disappear within timeout; continuing without failing the test.');
         }
     }
 
@@ -506,7 +508,7 @@ export abstract class PlaywrightWrapper {
             await this.page.check(locator, { force: true });
             let value = await this.page.isChecked(locator);
             if (value == false) {
-                console.log("The CheckBox is not Clicked");
+                this.logger.info("The CheckBox is not Clicked");
             }
 
         })
@@ -528,14 +530,14 @@ export abstract class PlaywrightWrapper {
                 await this.page.focus(locator)
                 await this.page.check(locator, { force: true });
             } else {
-                console.log("The button is already checked")
+                this.logger.info("The button is already checked")
             }
         })
     }
 
     async childTab(locator: string): Promise<void> {
 
-        [PlaywrightWrapper.newPage] = await Promise.all([
+        [this.newPage] = await Promise.all([
             this.context.waitForEvent('page'),
             this.page.locator(locator).click()
         ]);

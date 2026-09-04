@@ -17,6 +17,7 @@ export const Inputs = {
     NAVIGATION_URL: 'translate',
   },
 
+  
   // Overview page
   OVERVIEW: {
 
