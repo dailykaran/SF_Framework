@@ -35,4 +35,5 @@ jobs:
           reports/playwright-report/
           reports/allure-results/
           reports/allure-report/
+          reports/logs/
         retention-days: 30

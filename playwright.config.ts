@@ -32,6 +32,28 @@ if (process.env.LOGGING_ENABLED?.toLowerCase() !== 'false') {
   reporters.push(['./src/utils/logger/playwright-logger-reporter.ts']);
 }
 
+const roles = [
+  { name: 'admin', storageState: '.auth/sf-admin.json' },
+  { name: 'translator', storageState: '.auth/sf-translator.json' },
+  { name: 'reviewer', storageState: '.auth/sf-reviewer.json' },
+  { name: 'cc-checker', storageState: '.auth/sf-cc-checker.json' },
+];
+
+const browsers = [
+  { name: 'chrome', device: devices['Desktop Chrome'] },
+  { name: 'firefox', device: devices['Desktop Firefox'] },
+  { name: 'webkit', device: devices['Desktop Safari'] },
+];
+// Generate projects dynamically based on roles and browsers
+const browser_role_projects = browsers.flatMap(({ name: browserName, device }) =>
+  roles.map(({ name: roleName, storageState }) => ({
+    name: `${browserName}-${roleName}`,
+    use: { ...device, storageState },
+  }))
+);
+
+
+
 export default defineConfig({
   testDir: './tests',
 
@@ -59,41 +81,7 @@ export default defineConfig({
     navigationTimeout: 120_000,
   },
 
-  projects: [
-    // ── Admin ─────────────────────────────────────────────────────────────
-    {
-      name: 'chrome-admin',
-      use: {
-        ...devices['Desktop Chrome'],
-        storageState: '.auth/sf-admin.json',
-      },
-    },
-
-    // ── Editor / Translator ───────────────────────────────────────────────
-    {
-      name: 'chrome-translator',
-      use: {
-        ...devices['Desktop Chrome'],
-        storageState: '.auth/sf-translator.json',
-      },
-    },
-
-    // ── Reviewer ──────────────────────────────────────────────────────────
-    {
-      name: 'chrome-reviewer',
-      use: {
-        ...devices['Desktop Chrome'],
-        storageState: '.auth/sf-reviewer.json',
-      },
-    },
-
-    // ── CC Checker ─────────────────────────────────────────────────────────
-    {
-      name: 'chrome-cc-checker',
-      use: {
-        ...devices['Desktop Chrome'],
-        storageState: '.auth/sf-cc-checker.json',
-      },
-    },
-  ],
+  projects: 
+    browser_role_projects,
+  
 });
