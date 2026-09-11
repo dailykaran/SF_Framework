@@ -4,6 +4,7 @@ import * as fs from 'fs';
 import { createLogger, getSpecLogFilePath, releaseLogger, serializeError, writeLog } from '../utils/logger/logger';
 import type winston from 'winston';
 import { EditReviewPage } from '../pages/Edit_Review/editReview';
+import { beforeAfterEach } from '../utils/beforeAfter/beforeAfterEach';
 
 /**
  * Auth fixtures — use these when a single test needs to act as
@@ -29,6 +30,7 @@ type AuthFixtures = {
   adminEditReviewPage: EditReviewPage;
   translatorEditReviewPage: EditReviewPage;
   reviewerEditReviewPage: EditReviewPage;
+  ccCheckerEditReviewPage: EditReviewPage;
 };
 
 const AUTH = {
@@ -36,6 +38,13 @@ const AUTH = {
   translator:   path.resolve('.auth/sf-translator.json'),
   reviewer: path.resolve('.auth/sf-reviewer.json'),
   ccChecker: path.resolve('.auth/sf-cc-checker.json'),
+} as const;
+
+const SESSION_FILE = {
+  admin: AUTH.admin,
+  translator: AUTH.translator,
+  reviewer: AUTH.reviewer,
+  ccChecker: AUTH.ccChecker,
 } as const;
 
 /** Creates a new browser context pre-loaded with the given storageState. */
@@ -105,6 +114,7 @@ export const test = base.extend<AuthFixtures>({
   adminPage: async ({ browser, logger }, use) => {
     const page = await makeAuthPage(browser, AUTH.admin);
     addPageDiagnostics(page, logger, 'admin');
+    await new beforeAfterEach(page).checkAuthentication(SESSION_FILE.admin);
     await use(page);
     await page.context().close();
   },
@@ -112,6 +122,7 @@ export const test = base.extend<AuthFixtures>({
   translatorPage: async ({ browser, logger }, use) => {
     const page = await makeAuthPage(browser, AUTH.translator);
     addPageDiagnostics(page, logger, 'translator');
+    await new beforeAfterEach(page).checkAuthentication(SESSION_FILE.translator);
     await use(page);
     await page.context().close();
   },
@@ -119,6 +130,7 @@ export const test = base.extend<AuthFixtures>({
   reviewerPage: async ({ browser, logger }, use) => {
     const page = await makeAuthPage(browser, AUTH.reviewer);
     addPageDiagnostics(page, logger, 'reviewer');
+    await new beforeAfterEach(page).checkAuthentication(SESSION_FILE.reviewer);
     await use(page);
     await page.context().close();
   },
@@ -126,6 +138,7 @@ export const test = base.extend<AuthFixtures>({
   ccCheckerPage: async ({ browser, logger }, use) => {
     const page = await makeAuthPage(browser, AUTH.ccChecker);
     addPageDiagnostics(page, logger, 'cc-checker');
+    await new beforeAfterEach(page).checkAuthentication(SESSION_FILE.ccChecker);
     await use(page);
     await page.context().close();
   },
@@ -141,6 +154,11 @@ export const test = base.extend<AuthFixtures>({
   reviewerEditReviewPage: async ({ reviewerPage, logger }, use) => {
     await use(new EditReviewPage(reviewerPage, reviewerPage.context(), logger));
   },
+
+  ccCheckerEditReviewPage: async ({ ccCheckerPage, logger }, use) => {
+    await use(new EditReviewPage(ccCheckerPage, ccCheckerPage.context(), logger));
+  },
+  
 });
 
 export { expect };
