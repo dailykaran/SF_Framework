@@ -18,7 +18,7 @@ export class EditReviewPage extends PlaywrightWrapper {
   async open(projectName: string): Promise<void> {
     await test.step(`Open project: ${projectName}`, async () => {
       this.logger.info('Opening project step', { projectName });
-      await this.loadApplication(`${process.env.BASE_URL}projects`);
+      await this.loadPage(`${process.env.BASE_URL}projects`);
       await this.interactWithRole('button', projectName, 'click');
       await this.smartWait.waitForUrl(`**/${Asserts.EDIT_REVIEW.NAVIGATION_URL}/**`);
     });
@@ -34,11 +34,11 @@ export class EditReviewPage extends PlaywrightWrapper {
   }
 
   async configureTranslatorSettings(): Promise<Locator> {
-    const settingsButton = this.page.locator(Selectors.EDIT_REVIEW.SETTINGS_BUTTON);
+    const settingsButton = this.page.locator(Selectors.EDIT_REVIEW.CONFIG_SETTINGS_BUTTON);
     await test.step('Configure translator settings', async () => {
       this.logger.info('Configuring translator settings step');
       await this.smartWait.waitForNetworkIdle();
-      await this.smartWait.waitForVisible(Selectors.EDIT_REVIEW.SETTINGS_BUTTON);
+      await this.smartWait.waitForVisible(Selectors.EDIT_REVIEW.CONFIG_SETTINGS_BUTTON);
     });
     return settingsButton;
   }

@@ -3,7 +3,7 @@ import * as path from 'path';
 import * as fs from 'fs';
 import { createLogger, getSpecLogFilePath, releaseLogger, serializeError, writeLog } from '../utils/logger/logger';
 import type winston from 'winston';
-import { EditReviewPage } from '../pages/Edit_Review/editReview';
+import { PageManager } from '../pages/pageManager';
 import { beforeAfterEach } from '../utils/beforeAfter/beforeAfterEach';
 
 /**
@@ -14,9 +14,9 @@ import { beforeAfterEach } from '../utils/beforeAfter/beforeAfterEach';
  *
  *   import { test } from '../fixtures/auth.fixtures';
  *
- *   test('admin invites translator', async ({ adminPage, translatorPage }) => {
- *     await adminPage.goto('...');
- *     await translatorPage.goto('...');
+ *   test('admin invites translator', async ({ adminPages, translatorPages }) => {
+ *     await adminPages.myProjects.openProject('F03');
+ *     await translatorPages.editReview.open('F03');
  *   });
  */
 
@@ -27,17 +27,18 @@ type AuthFixtures = {
   reviewerPage: Page;
   ccCheckerPage: Page;
 
-  adminEditReviewPage: EditReviewPage;
-  translatorEditReviewPage: EditReviewPage;
-  reviewerEditReviewPage: EditReviewPage;
-  ccCheckerEditReviewPage: EditReviewPage;
+  // Page Managers per role
+  adminPages: PageManager;
+  translatorPages: PageManager;
+  reviewerPages: PageManager;
+  ccCheckerPages: PageManager;
 };
 
 const AUTH = {
-  admin:    path.resolve('.auth/sf-admin.json'),
-  translator:   path.resolve('.auth/sf-translator.json'),
-  reviewer: path.resolve('.auth/sf-reviewer.json'),
-  ccChecker: path.resolve('.auth/sf-cc-checker.json'),
+  admin:    path.resolve(`${process.env.ADMIN}`),
+  translator:   path.resolve(`${process.env.TRANSLATOR}`),
+  reviewer: path.resolve(`${process.env.REVIEWER}`),
+  ccChecker: path.resolve(`${process.env.CC_CHECKER}`),
 } as const;
 
 const SESSION_FILE = {
@@ -143,22 +144,22 @@ export const test = base.extend<AuthFixtures>({
     await page.context().close();
   },
 
-  adminEditReviewPage: async ({ adminPage, logger }, use) => {
-    await use(new EditReviewPage(adminPage, adminPage.context(), logger));
+  adminPages: async ({ adminPage, logger }, use) => {
+    await use(new PageManager(adminPage, adminPage.context(), logger));
   },
 
-  translatorEditReviewPage: async ({ translatorPage, logger }, use) => {
-    await use(new EditReviewPage(translatorPage,  translatorPage.context(), logger));
+  translatorPages: async ({ translatorPage, logger }, use) => {
+    await use(new PageManager(translatorPage, translatorPage.context(), logger));
   },
 
-  reviewerEditReviewPage: async ({ reviewerPage, logger }, use) => {
-    await use(new EditReviewPage(reviewerPage, reviewerPage.context(), logger));
+  reviewerPages: async ({ reviewerPage, logger }, use) => {
+    await use(new PageManager(reviewerPage, reviewerPage.context(), logger));
   },
 
-  ccCheckerEditReviewPage: async ({ ccCheckerPage, logger }, use) => {
-    await use(new EditReviewPage(ccCheckerPage, ccCheckerPage.context(), logger));
+  ccCheckerPages: async ({ ccCheckerPage, logger }, use) => {
+    await use(new PageManager(ccCheckerPage, ccCheckerPage.context(), logger));
   },
   
 });
 
-export { expect };
+export { expect, PageManager };

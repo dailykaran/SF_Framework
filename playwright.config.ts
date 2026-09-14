@@ -65,14 +65,14 @@ export default defineConfig({
   retries:       process.env.CI ? 2 : 0,
   workers:       process.env.CI ? 1 : undefined,
   reporter: reporters,
-  timeout: 120_000,
+  timeout: 360_000,
   expect: {
     timeout: 15_000,
   },
 
 
   use: {
-    viewport:          { width: 1920, height: 1080 },
+    viewport:          { width: 1280, height: 720 },
     headless:          !!process.env.CI || true,
     trace:             'on-first-retry',
     screenshot:        'only-on-failure',

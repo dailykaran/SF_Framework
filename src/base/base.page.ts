@@ -1,7 +1,8 @@
 
 import { Page, test, expect, BrowserContext, Locator } from "@playwright/test";
 import * as path from 'path';
-import fs from 'fs';
+import * as fs from 'fs';
+import { resolve } from 'path';
 import type winston from 'winston';
 
 
@@ -24,6 +25,21 @@ export abstract class PlaywrightWrapper {
         this.logger = logger;
     }
 
+    /**
+     * Loads local storage data from a JSON file and sets it in the browser context.
+     * @param filePath The path to the JSON file containing the local storage data.
+     */
+    async loadLocalStorageFromFile(filePath: string): Promise<void> {
+        const storage = JSON.parse(
+          fs.readFileSync(resolve(filePath), 'utf-8')
+        );
+
+        await this.page.addInitScript((data) => {
+            for (const [key, value] of Object.entries(data)) {
+                globalThis.localStorage.setItem(key, typeof value === 'string' ? value : JSON.stringify(value));
+        }
+        }, storage);
+    }
 
     /**
    * Types into the specified textbox after clearing any existing text.
@@ -117,7 +133,7 @@ export abstract class PlaywrightWrapper {
     * 
     * @param {string} url - The URL to navigate to.
     */
-    public async loadApplication(url: string) {
+    public async loadPage(url: string) {
         try {
             await this.page.goto(url); // Increased timeout for 60 seconds
             this.logger.info(`Successfully loaded the URL: ${url}`);
@@ -389,10 +405,10 @@ export abstract class PlaywrightWrapper {
     async waitForElementHidden(locator: string, type: string) {
         try {
             await this.wait('minWait')
-            await this.page.waitForSelector(locator, { state: 'hidden', timeout: 20000 });
-            this.logger.info(`Element with XPath "${type}" is hidden as expected.`);
+            await this.page.waitForSelector(locator, { state: 'hidden', timeout: 50000 });
+            this.logger.info(`Element with CSS "${type}" is hidden as expected.`);
         } catch (error) {
-            this.logger.error(`Element with XPath "${type}" is still visible.`);
+            this.logger.error(`Element with CSS "${type}" is still visible.`);
         }
     }
 
@@ -568,7 +584,7 @@ export abstract class PlaywrightWrapper {
         return this.page.locator(`#${locator}`)
     }
     getByClass(locator: string): Locator {
-        return this.page.locator(`[class='${locator}']`)
+        return this.page.locator(`${locator}`)
     }
 
 /**

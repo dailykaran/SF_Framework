@@ -3,10 +3,10 @@ import { Asserts } from '../../src/test_data/constants/asserts';
 import { Inputs } from '../../src/test_data/constants/inputs';
 
 test('translator can open edit and review page', async ({
-  translatorEditReviewPage
+  translatorPages
 }) => {
-  await translatorEditReviewPage.open(Inputs.PROJECT_NAME.F03);
-  await translatorEditReviewPage.navigateToEditReview();
-  await expect(translatorEditReviewPage.page).toHaveURL(new RegExp(`/${Asserts.EDIT_REVIEW.NAVIGATION_URL}/`));
-  expect(await translatorEditReviewPage.configureTranslatorSettings()).toBeVisible();
+  await translatorPages.editReview.open(Inputs.PROJECT_NAME.F03);
+  await translatorPages.editReview.navigateToEditReview();
+  await expect(translatorPages.editReview.page).toHaveURL(new RegExp(`/${Asserts.EDIT_REVIEW.NAVIGATION_URL}/`));
+  expect(await translatorPages.editReview.configureTranslatorSettings()).toBeVisible();
 });

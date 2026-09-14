@@ -11,11 +11,14 @@ const log = createLogger('global-setup');
  *
  * For each of the 4 users the logic is:
  *
- *  ┌─ Does .auth/sf-{role}.json exist? ──────────────────────────────────────┐
+ *  ┌─ Are SF_{ROLE}_EMAIL / SF_{ROLE}_PASSWORD set in .env? ─────────────────┐
  *  │                                                                          │
- *  │  NO  → performLogin()  → save new JSON                                  │
+ *  │  NO  → skip this role (no login attempt, no JSON written/overwritten)   │
  *  │                                                                          │
- *  │  YES → isStorageStateValid()?                                            │
+ *  │  YES → Does .auth/sf-{role}.json exist? ────────────────────────────────┐
+ *  │          NO  → performLogin()  → save new JSON                          │
+ *  │                                                                          │
+ *  │          YES → isStorageStateValid()?                                   │
  *  │          checks 3 expiry sources:                                        │
  *  │            1. Cookie `expires` timestamps                                │
  *  │            2. Auth0 SPA SDK `@@auth0spajs@@` → expiresAt                │
@@ -195,7 +198,7 @@ async function performLogin(
     );
   }
 
-  const context = await browser.newContext({ viewport: { width: 1920, height: 1080 } });
+  const context = await browser.newContext({viewport: { width: 1280, height: 720 }});
   const page    = await context.newPage();
   const loginUsers = new LoginUsers(page, baseurl);
 
@@ -221,6 +224,12 @@ async function loginUser(
   browser: import('@playwright/test').Browser,
   user: UserConfig,
 ): Promise<void> {
+
+  // ── Path 0: no credentials in .env → skip this role entirely ─────────────
+  if (!user.email || !user.password) {
+    log.warn(`[${user.role}] skipping login - no credentials set in .env`);
+    return;
+  }
 
   // ── Path 1: JSON does not exist → login and create file ──────────────────
   if (!fs.existsSync(user.file)) {
