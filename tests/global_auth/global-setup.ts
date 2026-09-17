@@ -198,7 +198,7 @@ async function performLogin(
     );
   }
 
-  const context = await browser.newContext({viewport: { width: 1280, height: 720 }});
+  const context = await browser.newContext({viewport: { width: 1440, height: 900 },});
   const page    = await context.newPage();
   const loginUsers = new LoginUsers(page, baseurl);
 
@@ -225,11 +225,11 @@ async function loginUser(
   user: UserConfig,
 ): Promise<void> {
 
-  // ── Path 0: no credentials in .env → skip this role entirely ─────────────
+/*   // ── Path 0: no credentials in .env → skip this role entirely ─────────────
   if (!user.email || !user.password) {
     log.warn(`[${user.role}] skipping login - no credentials set in .env`);
     return;
-  }
+  } */
 
   // ── Path 1: JSON does not exist → login and create file ──────────────────
   if (!fs.existsSync(user.file)) {
@@ -264,8 +264,10 @@ async function globalSetup(_config: FullConfig): Promise<void> {
   });
   fs.mkdirSync(AUTH_DIR, { recursive: true });
 
+  
+  
   const browser = await chromium.launch({ headless: true, args: ['--no-sandbox']});
-
+  
   try {
     const selectedRole = process.env.PLAYWRIGHT_ROLE;
     const usersToLogin = selectedRole

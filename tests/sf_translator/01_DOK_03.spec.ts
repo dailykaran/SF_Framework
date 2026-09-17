@@ -2,22 +2,22 @@ import { test, expect } from '../../src/fixtures/auth.fixtures';
 import { Asserts } from '../../src/test_data/constants/asserts';
 import { Inputs } from '../../src/test_data/constants/inputs';
 
-test.beforeEach(async ({ translatorPages }) => {
+test.beforeEach(async ({ adminPages }) => {
     await console.log('Before each test for getting project connected');
-    await translatorPages.myProjects.adminConnectProjects(Inputs.PROJECT_NAME.TNN01);
+    await adminPages.myProjects.adminConnectProjects(Inputs.PROJECT_NAME.TNN01);
 });
 
-test.afterEach(async ({ translatorPages }) => {
+test.afterEach(async ({ adminPages }) => {
     await console.log('After each test for deleting project');
-    await translatorPages.myProjects.adminDeleteProject(Inputs.PROJECT_NAME.TNN01);
-    await translatorPages.settings.deleteProject(Inputs.PROJECT_NAME.TNN01);
+    await adminPages.myProjects.adminDeleteProject(Inputs.PROJECT_NAME.TNN01);
+    await adminPages.settings.deleteProject(Inputs.PROJECT_NAME.TNN01);
 });
 
 test('translator can open edit and review page', async ({
   translatorPages
 }) => {
-  //await translatorPages.myProjects.joinProject(Inputs.PROJECT_NAME.TNN01);
-  await translatorPages.myProjects.joinProjectTemp(Inputs.PROJECT_NAME.TNN01);
+  await translatorPages.myProjects.joinProject(Inputs.PROJECT_NAME.TNN01);
+  //await translatorPages.myProjects.joinProjectTemp(Inputs.PROJECT_NAME.TNN01);
   await translatorPages.editReview.open(Inputs.PROJECT_NAME.TNN01);
   await translatorPages.editReview.navigateToEditReview();
 

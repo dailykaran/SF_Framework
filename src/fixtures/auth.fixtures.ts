@@ -55,7 +55,7 @@ async function makeAuthPage(
 ): Promise<Page> {
   const context = await browser.newContext({ 
     storageState: storageStatePath,
-    viewport: { width: 1920, height: 1080 }
+    viewport: { width: 1440, height: 900}
   });
   return context.newPage();
 }
