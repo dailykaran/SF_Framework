@@ -17,7 +17,7 @@ const AUTH_DIR = path.resolve('.auth');
 async function globalTeardown(): Promise<void> {
   const startOffset = getFrameworkLogSize();
   log.info('Global authentication teardown started');
-
+ 
   if (!fs.existsSync(AUTH_DIR)) return;
 
    const files = fs

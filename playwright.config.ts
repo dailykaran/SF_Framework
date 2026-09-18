@@ -57,7 +57,7 @@ const browser_role_projects = browsers.flatMap(({ name: browserName, device }) =
 export default defineConfig({
   testDir: './tests',
 
-  globalSetup:    require.resolve('./tests/global_auth/global-setup'), 
+  globalSetup:    require.resolve('./tests/global_auth/global-setup.persistent-profile'), 
   globalTeardown: require.resolve('./tests/global_auth/global-teardown'),
 
   fullyParallel: true,

@@ -29,7 +29,8 @@ export class SettingsPage extends PlaywrightWrapper {
       await this.interactWithElement('LABEL', Inputs.LABELS.PROJECT_NAME, 'fill', this.extractAfterHyphen(projectName));
       await this.interactWithRole('button', Inputs.BUTTONS.DELETE_DIALOG_BUTTON, 'click');
       await this.smartWait.waitForNetworkIdle();
-      await this.smartWait.waitForUrl(new RegExp(`/${Inputs.NAV.MY_PROJECTS}(/|$)`));  
+      await this.smartWait.waitForUrl(new RegExp(`/${Inputs.NAV.MY_PROJECTS}(/|$)`));
+      await this.logger.info('A project has been deleted.');  
     });
   }
 

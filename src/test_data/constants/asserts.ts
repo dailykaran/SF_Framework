@@ -10,6 +10,12 @@ export const Asserts = {
   EDIT_REVIEW: {
     NAVIGATION_URL: 'translate',
   },
+
+ // Snack Bar
+  SNACK_BAR: {
+    SYNC_SUCCESS_MESSAGE: 'Successfully synchronized',
+  },
+
   // Checking page
   CHECKING: {
     NAVIGATION_URL: 'checking',

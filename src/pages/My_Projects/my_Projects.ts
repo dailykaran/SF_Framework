@@ -68,7 +68,7 @@ export class MyProjectsPage extends PlaywrightWrapper {
       
       await this.smartWait.waitForUrl(new RegExp(`/${Inputs.EDIT_REVIEW.NAVIGATION_URL}(/|$)`));
       await this.smartWait.waitForNetworkIdle();
-      
+      await this.logger.info('A project has been connected.');
     });
   }
 
@@ -100,6 +100,7 @@ export class MyProjectsPage extends PlaywrightWrapper {
       await this.smartWait.waitForUrl(new RegExp(`/${Inputs.EDIT_REVIEW.NAVIGATION_URL}(/|$)`));
       await this.smartWait.waitForNetworkIdle();
       await this.interactWithRole('link', Inputs.LINK.EDIT_REVIEW, 'click');
+      await this.smartWait.waitForNetworkIdle();
 
       //await this.handleConnectProjectProgress(projectName);
       

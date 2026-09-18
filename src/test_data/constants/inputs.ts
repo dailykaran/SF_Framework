@@ -19,10 +19,15 @@ export const Inputs = {
     NAVIGATION_URL: 'translate',
   },
 
+  //books
+  BOOKS: {
+    GENESIS: 'Genesis',
+    MARK: 'Mark',
+  },
+  
   // Synchronization page
   SYNC_WITH_PARATEXT: {
     NAVIGATION_URL: 'sync',
-    SNACK_BAR_MESSAGE: 'Successfully synchronized',
   },
 
   // Questions & Answers page
