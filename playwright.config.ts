@@ -52,12 +52,17 @@ const browser_role_projects = browsers.flatMap(({ name: browserName, device }) =
   }))
 );
 
-
+const sampleScript = {
+  name: 'sf_localhost',
+  testDir: './tests/login',
+  testMatch: /.*\.spec\.ts$/,
+  use: { ...devices['Desktop Chrome'] },
+};
 
 export default defineConfig({
   testDir: './tests',
 
-  globalSetup:    require.resolve('./tests/global_auth/global-setup.persistent-profile'), 
+  globalSetup:    require.resolve('./tests/global_auth/global-setup'), 
   globalTeardown: require.resolve('./tests/global_auth/global-teardown'),
 
   fullyParallel: true,
@@ -81,7 +86,8 @@ export default defineConfig({
     navigationTimeout: 120_000,
   },
 
-  projects: 
-    browser_role_projects,
-  
+  projects: [
+    ...browser_role_projects,
+    sampleScript,
+  ],
 });

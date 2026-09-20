@@ -99,6 +99,94 @@ export class LoginUsers {
     }
 
 
+    private async performParatextLoginLocalHost(email: string, password: string) {
+        await this.page.setDefaultNavigationTimeout(90000); 
+            await this.page.goto(process.env.BASE_URL || 'http://localhost:5000');
+            
+            // Verify page loads successfully
+            await expect(this.page).toHaveTitle('Scripture Forge');  
+           
+            // Click Log In button
+            const logInButton2 = this.page.getByRole('link', { name: 'Log In' });
+            await logInButton2.click();
+            
+            await this.page.waitForLoadState('networkidle');
+            
+            // Click "Log in with Paratext" button
+            const paratextButton = this.page.locator('a').filter({ hasText: 'Log in with Paratext' });
+            await expect(paratextButton).toBeVisible({ timeout: 5000 });
+            await paratextButton.click();
+            
+            // Wait for Paratext authorization page
+            await this.page.waitForURL('**https://registry-dev.paratext.org/auth?**', { timeout: 20000 });
+            
+            // Verify redirect to Authorise Application page
+            const authHeading = this.page.getByRole('heading', { name: 'Authorise Application' });
+            await expect(authHeading).toBeVisible(); 
+            
+            // Fill email
+            const emailInput = this.page.getByPlaceholder('Email address');
+            await emailInput.fill(email);
+            
+            // Submit form by pressing Enter
+            await emailInput.press('Enter');
+            
+             // Fill password
+            await this.page.waitForSelector('#password', { timeout: 5000 });
+            const passwordInput = this.page.locator('#password-group #password');
+            await passwordInput.fill(password);
+            
+            // Submit form by pressing Enter
+            await this.page.waitForTimeout(1500);
+            await this.page.waitForSelector('button[class="login-button normal"]', { timeout: 25000 });
+            await this.page.locator('#password-group').getByRole('button').click();
+                            
+            await this.page.waitForSelector('.btn-success', { timeout: 20000 });
+            const authorizeAccept = this.page.locator('.btn-success');
+            await expect(authorizeAccept).toBeVisible({ timeout: 10000 });
+            await authorizeAccept.click();
+
+            await this.page.waitForSelector('#allow', { timeout: 10000 });
+            const authorizeButton = this.page.locator('#allow');
+            await expect(authorizeButton).toBeVisible({ timeout: 10000 });
+            await authorizeButton.click();
+            
+    
+            // Wait for Scripture Forge projects page
+            await this.page.waitForURL('http://localhost:5000/projects', { timeout: 35000, waitUntil: 'networkidle' });
+            
+            // Wait for the projects page to fully load - either show projects or empty state
+            await Promise.race([
+                this.page.locator('.content h1:has-text("My projects")').waitFor({ state: 'visible', timeout: 15000 }),
+                this.page.locator('h2:has-text("Not connected")').waitFor({ state: 'visible', timeout: 15000 }),
+            ]);
+            
+            await expect(this.page).toHaveURL(/.*projects/);
+            await expect(this.page.locator('.content h1')).toContainText('My projects');
+
+    }
+
+    private async performCCLoginLocalhost(email: string, password: string) {
+        await this.page.setDefaultNavigationTimeout(90000); 
+        await this.page.goto(this.baseUrl);
+        await expect(this.page).toHaveTitle('Scripture Forge');  
+       
+        const logInButton = this.page.getByRole('link', { name: 'Log In' });
+        await logInButton.click();
+        
+        await this.page.waitForLoadState('networkidle');
+        await this.page.locator('input[type="email"]').fill(email);
+        await this.page.locator('input[type="password"]').fill(password);
+               
+        // Submit form by pressing Enter
+        await this.page.getByRole('button', { name: 'Log In' }).click();
+        await this.page.waitForURL('**/localhost:5000/projects', { timeout: 35000, waitUntil: 'networkidle' });
+        //await this.page.waitForSelector('h2:has-text("Not connected")', { timeout: 10000 });
+        
+        await expect(this.page).toHaveURL(/.*projects/);
+        await expect(this.page.locator('.content h1')).toContainText('My projects');
+    }
+
     // A trusted persistent profile can silently re-auth and land straight on /projects, skipping the form below
     private isOnProjectsPage(): boolean {
         return /\/projects(?:[/?]|$)/.test(this.page.url());
@@ -219,6 +307,16 @@ export class LoginUsers {
         await this.performCCLogin(`${process.env.SF_CC_CHECKER_EMAIL}`, `${process.env.SF_CC_CHECKER_PASSWORD}`);
     }
 
+    //localhost login methods for Paratext and CC checker
+    async paratextLoginLocalhost(userEmail: string, userPassword: string) {
+        log.info('Logging in Paratext user on localhost');
+        await this.performParatextLoginLocalHost(userEmail, userPassword);
+    }
+
+    async CCLoginLocalhost() {
+        log.info('Logging in CC checker on localhost');
+        await this.performCCLoginLocalhost(`${process.env.SF_CC_CHECKER_EMAIL}`, `${process.env.SF_CC_CHECKER_PASSWORD}`);
+    }
     
 }
 

@@ -204,9 +204,9 @@ async function performLogin(
 
   try {
     if (user.role === 'cc_checker') {
-      await loginUsers.CCLogin();
+      await loginUsers.CCLoginLocalhost();
     } else {
-      await loginUsers.paratextLogin(user.email, user.password);
+      await loginUsers.paratextLoginLocalhost(user.email, user.password);
     }
 
     await context.storageState({ path: user.file });
@@ -225,11 +225,11 @@ async function loginUser(
   user: UserConfig,
 ): Promise<void> {
 
-/*   // ── Path 0: no credentials in .env → skip this role entirely ─────────────
+  // ── Path 0: no credentials in .env → skip this role entirely ─────────────
   if (!user.email || !user.password) {
     log.warn(`[${user.role}] skipping login - no credentials set in .env`);
     return;
-  } */
+  }
 
   // ── Path 1: JSON does not exist → login and create file ──────────────────
   if (!fs.existsSync(user.file)) {
@@ -266,7 +266,7 @@ async function globalSetup(_config: FullConfig): Promise<void> {
 
   
   
-  const browser = await chromium.launch({ headless: false, args: ['--no-sandbox']});
+  const browser = await chromium.launch({ headless: true, args: ['--no-sandbox']});
   
   try {
     const selectedRole = process.env.PLAYWRIGHT_ROLE;
