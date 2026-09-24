@@ -1,37 +1,29 @@
 # Scripture Forge Playwright Automation Framework
 
-A TypeScript and Playwright test automation framework for Scripture Forge QA at `qa.scriptureforge.org`.
+A TypeScript and Playwright end-to-end test framework for Scripture Forge. It uses role-based authenticated browser sessions, page objects, shared test-data generators, Winston logging, and Playwright and Allure reporting.
+## Stack
 
-The framework is currently in partial development. It provides role-based authentication, reusable page objects and fixtures, Faker-based test data, synthetic scripture references and question/answer data, structured Winston logging, and Playwright and Allure reporting. Coverage is currently focused on login and the translator Edit & Review smoke flow.
-
-## Technology Stack
-
-- Node.js
-- TypeScript
+- Node.js and TypeScript
 - Playwright Test
-- `@faker-js/faker`
-- `allure-playwright`
-- `allure-commandline`
-- `winston`
 - dotenv
+- `@faker-js/faker`
+- Winston
+- `allure-playwright` and `allure-commandline`
 
 ## Prerequisites
+- Node.js and npm
+- Access to the target Scripture Forge environment
+- Credentials for the roles to be exercised
+- Playwright browser binaries
 
-- Node.js and npm installed
-- Access to the Scripture Forge QA environment
-- Valid test credentials for the four configured roles
-- Google/Paratext authentication available for admin, translator, and reviewer users
-- Direct Scripture Forge login available for the CC Checker user
-
-## Installation
-
+Install dependencies and browser binaries:
 ```powershell
 npm install
+npx playwright install
 ```
 
 ## Environment Configuration
-
-Create a local `.env` file in the project root. Use `.env.example` as the template and replace the sample values with valid QA credentials.
+Create a root `.env` file with the base URL and only the credentials needed for the roles being run:
 
 ```dotenv
 BASE_URL=https://qa.scriptureforge.org/
@@ -49,188 +41,120 @@ SF_CC_CHECKER_EMAIL=your-cc-checker-email
 SF_CC_CHECKER_PASSWORD=your-cc-checker-password
 ```
 
-Do not commit `.env`, credentials, or `.auth` session files. They are excluded by `.gitignore`.
-
-## Project Structure
+`.env` and `.auth/` are ignored by Git. Do not commit credentials, exported storage states, or persistent browser profiles.
+## Framework Structure
 
 ```text
 .
-├── config/
-│   └── environments/
-│       └── qa.ts                 # Reserved for QA environment configuration
-├── src/
-│   ├── base/
-│   │   └── base.page.ts          # Shared page-object behavior
-│   ├── fixtures/
-│   │   └── auth.fixtures.ts      # Authenticated pages and page-object fixtures
-│   ├── locators/
-│   │   └── selectors.ts          # Shared selectors
-│   ├── pages/
-│   │   ├── Edit_Review/editReview.ts
-│   │   └── login/loginSF_Users.ts
-│   ├── test_data/constants/
-│   │   ├── asserts.ts            # Assertion and route constants
-│   │   └── inputs.ts             # Reusable test inputs
-│   └── utils/
-│       ├── data/                 # Faker and synthetic scripture data
-│       ├── JSONFilesHandler/     # JSON read and update helpers
-│       ├── logger/               # Winston logger and Playwright reporter
-│       └── waits/                # Smart-wait helpers
-├── tests/
-│   ├── data/
-│   │   └── scripture_generator.spec.ts
-│   ├── global_auth/
-│   │   ├── global-setup.ts       # Creates or refreshes role session files
-│   │   └── global-teardown.ts
-│   ├── login/
-│   │   ├── sf_admin_user.spec.ts
-│   │   ├── sf_cc_user.spec.ts
-│   │   └── sf_translator_user.spec.ts
-│   └── sf_translator/
-│       └── edit_review.spec.ts
-├── reports/
-│   ├── allure-report/            # Generated Allure HTML report
-│   ├── allure-results/           # Allure raw result files
-│   ├── logs/                     # Run and per-spec log files
-│   └── playwright-report/        # Generated Playwright HTML report
-├── playwright.config.ts
-├── package.json
-└── tsconfig.json
+|- config/
+|  `- environments/              # Environment modules; qa.ts is currently empty
+|- src/
+|  |- base/                      # Shared page-object behavior
+|  |- fixtures/                  # Role pages, page managers, logging, diagnostics
+|  |- locators/                  # Centralized selectors
+|  |- pages/                     # Login, projects, edit/review, sync, settings, checking
+|  |- test_data/constants/       # Reusable routes, assertions, and inputs
+|  `- utils/
+|     |- data/                   # Faker and synthetic scripture data
+|     |- JSONFilesHandler/       # JSON read/update helpers
+|     |- logger/                 # Winston logger and Playwright reporter
+|     `- waits/                  # Shared wait helpers
+|- tests/
+|  |- global_auth/               # Persistent-profile setup and teardown
+|  |- login/                     # Admin, translator, and CC Checker access checks
+|  |- sf_translator/             # Edit & Review and synchronization scenarios
+|  |- CC_Checking/               # Questions and Answers coverage
+|  `- data/                      # Synthetic scripture-data tests
+|- reports/                      # Generated logs and reports
+|- playwright.config.ts
+`- package.json
 ```
 
-## Authentication Flow
+`PageManager` provides the page objects used by authenticated fixtures. Tests import `test` and `expect` from `src/fixtures/auth.fixtures.ts` to receive role pages and their corresponding page managers.
+## Authentication and Projects
 
-`playwright.config.ts` defines four browser projects:
+Before a run, `tests/global_auth/global-setup.persistent-profile.ts` creates a persistent Chromium profile under `.auth/.chrome-profiles/<role>` for each selected role. It logs in and exports the current browser storage state to:
 
-- `chrome-admin`
-- `chrome-translator`
-- `chrome-reviewer`
-- `chrome-cc-checker`
+- `.auth/sf-admin.json`
+- `.auth/sf-translator.json`
+- `.auth/sf-reviewer.json`
+- `.auth/sf-cc-checker.json`
 
-Before the test run, `tests/global_auth/global-setup.ts`:
+Set `PLAYWRIGHT_ROLE` to one of `admin`, `translator`, `reviewer`, or `cc_checker` to prepare only that role. Without it, setup processes every configured role that has credentials.
+The Playwright config dynamically creates 12 projects from this matrix:
 
-1. Reads the role credentials from environment variables.
-2. Checks whether `.auth/sf-{role}.json` exists.
-3. Validates cookie, Auth0 cache, and JWT expiry values.
-4. Reuses a valid session or performs a fresh login when the session is expired.
-5. Stores the authenticated browser state in `.auth/`.
+| Browser | Roles |
+| --- | --- |
+| `chrome` | `admin`, `translator`, `reviewer`, `cc-checker` |
+| `firefox` | `admin`, `translator`, `reviewer`, `cc-checker` |
+| `webkit` | `admin`, `translator`, `reviewer`, `cc-checker` |
 
-The `PLAYWRIGHT_ROLE` environment variable can limit global setup to one role. This is used by CI for the `cc_checker` role. When no role is specified, the configured role sessions are prepared for the browser projects.
-
-The test fixtures use these storage-state files to create authenticated Playwright pages. The current global setup performs live authentication against the QA environment when session files are missing or expired.
-
+Examples include `chrome-translator` and `webkit-cc-checker`. Each project loads that role's exported storage state. Global teardown removes only exported `.auth/*.json` files; persistent profiles remain for later trusted-device logins.
 ## Running Tests
 
-Run the complete suite:
+`package.json` currently contains report scripts only, so invoke Playwright with `npx`.
+
+Run the configured suite:
 
 ```powershell
 npx playwright test
 ```
 
-Run a specific spec:
+Run one browser-role project:
 
 ```powershell
-npx playwright test tests/sf_translator/edit_review.spec.ts
+$env:PLAYWRIGHT_ROLE='translator'
+npx playwright test --project=chrome-translator
 ```
 
-Run the synthetic data tests only:
+Run a focused scenario:
+
+```powershell
+$env:PLAYWRIGHT_ROLE='translator'
+npx playwright test tests/sf_translator/01_DOK_03.spec.ts --project=chrome-translator
+```
+
+Run the data-generator tests:
 
 ```powershell
 npx playwright test tests/data/scripture_generator.spec.ts --project=chrome-admin
 ```
 
-Run one browser project:
-
-```powershell
-npx playwright test --project=chrome-translator
-```
-
-Run with the Playwright UI mode:
+Open Playwright UI mode:
 
 ```powershell
 npx playwright test --ui
 ```
 
-Local runs are headed by default. CI runs headless automatically because `headless` is enabled when `CI` is set. The configuration also enables a 120-second test timeout, a 15-second assertion timeout, and one retry in CI.
+Current runtime defaults are a 1440 x 900 viewport, a six-minute test timeout, 15-second assertion timeout, one retry, failure traces and screenshots, and failure videos. The current `headless: !!process.env.CI || true` configuration always runs headless, including local runs. Set `LOGGING_ENABLED=false` to omit the custom Winston Playwright reporter.
+## Test Coverage
 
-To disable the custom Winston-backed reporter for a run, set `LOGGING_ENABLED=false`.
+Current checked-in coverage includes:
 
-### CI
+- Authenticated admin, translator, and CC Checker project access
+- Translator Edit & Review navigation and settings visibility
+- Admin project connection, translator project joining, and Paratext synchronization cancellation
+- CC Checker Questions and Answers navigation
+- Synthetic scripture references, verse-like text, and question/answer generators
 
-The GitHub Actions workflow runs on pushes and pull requests targeting `main` or `master`. It currently runs the CC Checker login test with the `chrome-cc-checker` project, generates the Allure report, and uploads the Playwright report, Allure results, and generated Allure report as an artifact retained for 30 days. Configure `BASE_URL`, `SF_CC_CHECKER_EMAIL`, and `SF_CC_CHECKER_PASSWORD` as repository secrets.
+The scenarios depend on preconfigured project names such as `F03` and `TNN01`, live Scripture Forge services, and valid role permissions. They are integration tests, not isolated unit tests.
+## Reports and Logs
 
-## Shared Data Utilities
-
-Import shared generators through the data barrel file:
-
-```typescript
-import {
-  CommonFakerData,
-  getQuestionAnswerForChapter,
-  getRandomVerse,
-} from '../../src/utils/data';
-```
-
-The common Faker generator provides reusable values such as:
-
-- Phone numbers
-- Birth dates
-- Current dates and times
-- Indian addresses
-- Names and email addresses
-- Prices and descriptions
-- Salutations
-- Amounts
-
-The scripture generator creates synthetic, non-scriptural test data. It does not bundle real Bible text:
-
-```typescript
-const verse = getRandomVerse();
-const questionAnswer = getQuestionAnswerForChapter('John', 3);
-```
-
-Available scripture functions include:
-
-- `getRandomReference()`
-- `getReferenceForChapter(book, chapter)`
-- `getRandomVerseText()`
-- `getRandomVerse()`
-- `getRandomVerses(count)`
-- `getRandomQuestionAnswer()`
-- `getRandomQuestionAnswers(count)`
-- `getQuestionAnswerForChapter(book, chapter)`
-- `getQuestionAnswersForChapter(book, chapter, count)`
-- `seedScripture(seed)`
-
-## Reports
-
-Each test run produces Playwright HTML output, Allure raw results, and structured logs:
+Playwright writes generated output to `reports/`:
 
 ```text
 reports/
-├── playwright-report/
-├── allure-results/
-├── allure-report/
-└── logs/
+|- playwright-report/             # Playwright HTML report
+|- allure-results/                # Raw Allure result data
+|- allure-report/                 # Generated Allure HTML report
+`- logs/<date>/                   # Framework and per-spec Winston logs
 ```
 
-The custom reporter writes run-level and per-spec log files under `reports/logs/<date>/`. Test code can also create a named logger and write structured events to the current spec log through the helpers in `src/utils/logger/logger.ts`.
-
-Generate the Allure HTML report:
+Generate or open the Allure report:
 
 ```powershell
 npm run allure:generate
-```
-
-Open the generated Allure report in a browser:
-
-```powershell
 npm run allure:open
-```
-
-Generate and open the Allure report in one command:
-
-```powershell
 npm run allure:report
 ```
 
@@ -240,74 +164,20 @@ Open the Playwright report:
 npx playwright show-report reports/playwright-report
 ```
 
-To create Allure data, run the Playwright tests first. The Allure reporter is enabled in `playwright.config.ts` and writes raw files to `reports/allure-results`.
+## CI
 
-## Current Coverage
+`.github/workflows/playwright.yml` runs on pushes and pull requests to `main` and `master`. It installs dependencies and Playwright browsers, runs `tests/login/sf_cc_user.spec.ts` using `chrome-cc-checker`, generates the Allure report, and uploads Playwright, Allure, and log artifacts for 30 days.
 
-Implemented:
+Configure these repository secrets for that workflow:
 
-- Four role-based Playwright projects
-- Cached authenticated browser sessions
-- Session expiry validation and automatic re-login
-- Reusable authentication fixtures
-- Shared base page, selectors, waits, JSON helpers, and test constants
-- Paratext/Google login flow for admin, translator, and reviewer
-- Direct login flow for the CC Checker
-- Basic admin project navigation test
-- CC Checker project navigation and permission test
-- Translator Edit & Review smoke test
-- Shared Faker data utilities
-- Synthetic scripture references, verse-like text, and question/answer data
-- Winston-backed run and per-spec logging
-- GitHub Actions workflow for the CC Checker smoke test
-- Playwright and Allure report generation
+- `BASE_URL`
+- `SF_CC_CHECKER_EMAIL`
+- `SF_CC_CHECKER_PASSWORD`
 
-Partial or planned:
+## Development Notes
 
-- The QA environment module at `config/environments/qa.ts` is currently empty; `BASE_URL` is read directly from `.env`.
-- Edit & Review page coverage currently verifies navigation and settings visibility only.
-- Translation, review, comments, approvals, and other business workflows are not yet automated.
-- Project name `- 03F` is currently hard-coded in the smoke tests.
-- `package.json` does not yet contain a general `test` script; commands currently use `npx playwright test`.
-- The CI workflow currently covers only the CC Checker smoke test; broader role coverage is not yet enabled.
-- Test-data lifecycle management is not yet complete.
-
-## Development Guidelines
-
-- Keep credentials in `.env` or CI secret variables.
-- Do not commit `.auth`, `reports`, `test-results`, or other generated artifacts.
-- Prefer page objects for UI interaction and fixtures for authenticated roles.
-- Import shared data through `src/utils/data/index.ts`.
-- Use the shared constants, selectors, waits, JSON helpers, and logger utilities when extending tests.
-- Keep synthetic test data deterministic when debugging by calling `seedScripture(seed)`.
-- Add focused tests when extending a page object or data generator.
-
-## Troubleshooting
-
-### Missing credentials
-
-Set all required `SF_*_EMAIL` and `SF_*_PASSWORD` variables in `.env`. Global setup fails when a role has missing credentials and a fresh login is required.
-
-### Session expired
-
-Delete the relevant `.auth/sf-{role}.json` file and rerun the test. Global setup will create a fresh session.
-
-### Allure report has no data
-
-Run the tests first, then generate and open the report:
-
-```powershell
-npx playwright test tests/data/scripture_generator.spec.ts --project=chrome-admin
-npm run allure:generate
-npm run allure:open
-```
-
-Use `reports/allure-report`, not a root-level `allure-report` path.
-
-### Logging
-
-Logs are written under `reports/logs/` during a run. Set `LOGGING_ENABLED=false` when troubleshooting without the custom logger reporter. The reporter is enabled by default.
-
-### QA login fails
-
-Confirm `BASE_URL`, credentials, network access, and the external Google/Paratext authentication flow. The login setup depends on live QA services and is not a fully isolated local test.
+- Keep UI interactions in page objects and obtain them through `PageManager`.
+- Reuse shared selectors, constants, waits, JSON helpers, loggers, and data generators instead of duplicating them in specs.
+- Use `seedScripture(seed)` when debugging synthetic scripture data deterministically.
+- `config/environments/qa.ts` is currently empty; the active base URL comes from `BASE_URL` in `.env`.
+- `reports/`, `test-results/`, Playwright reports, `.auth/`, and `node_modules/` are generated or local-only paths.
