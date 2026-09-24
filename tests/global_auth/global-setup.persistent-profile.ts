@@ -83,8 +83,8 @@ async function performLogin(user: UserConfig): Promise<void> {
     args:       ['--no-sandbox'],
     viewport:   { width: 1280, height: 720 },
     userAgent:  FIXED_USER_AGENT,
-    locale:     'en-US',
-    timezoneId: 'America/New_York',
+    locale:     'en-IN',
+    timezoneId: 'Asia/Kolkata',
   });
   const page = await context.newPage();
   const loginUsers = new LoginUsers(page, baseurl);

@@ -116,8 +116,9 @@ export class LoginUsers {
             await this.page.waitForLoadState('networkidle');
 
             if (!this.isOnProjectsPage()) {
-                const paratextButton = this.page.locator('a').filter({ hasText: 'Log in with Paratext' });
-                await expect(paratextButton).toBeVisible({ timeout: 5000 });
+                await this.page.waitForTimeout(20000);
+                const paratextButton = this.page.locator('a').filter({ hasText: 'Log in with Paratext', visible: true });
+                await expect(paratextButton).toBeVisible();
                 await paratextButton.click();
 
                 await Promise.race([

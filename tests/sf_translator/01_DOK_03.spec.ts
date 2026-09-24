@@ -2,46 +2,44 @@ import { test, expect } from '../../src/fixtures/auth.fixtures';
 import { Asserts } from '../../src/test_data/constants/asserts';
 import { Inputs } from '../../src/test_data/constants/inputs';
 
-test.beforeEach(async ({ adminPages }) => {
-    await adminPages.myProjects.adminConnectProjects(Inputs.PROJECT_NAME.TNN01); 
+test.beforeEach('SF admin setup for connecting a project', async ({ adminRolePages }) => {
+    await adminRolePages.myProjects.adminConnectProjects(Inputs.PROJECT_NAME.TNN01); 
 });
 
-test.afterEach(async ({ adminPages }) => {
-    await adminPages.myProjects.adminDeleteProject(Inputs.PROJECT_NAME.TNN01);
-    await adminPages.settings.deleteProject(Inputs.PROJECT_NAME.TNN01);
+test.afterEach('SF admin teardown for deleting a project', async ({ adminRolePages }) => {
+    await adminRolePages.myProjects.adminDeleteProject(Inputs.PROJECT_NAME.TNN01);
+    await adminRolePages.settings.deleteProject(Inputs.PROJECT_NAME.TNN01);
 });
 
-test('translator can open edit and review page', async ({
-  translatorPages
+test('DOK-03: Add cancel for sync', async ({
+  translatorRolePages
 }) => {
-  await translatorPages.myProjects.joinProject(Inputs.PROJECT_NAME.TNN01);
-  //await translatorPages.myProjects.joinProjectTemp(Inputs.PROJECT_NAME.TNN01);
-  //await translatorPages.editReview.open(Inputs.PROJECT_NAME.TNN01);
-  //await translatorPages.editReview.navigateToEditReview();
+  await translatorRolePages.myProjects.joinProject(Inputs.PROJECT_NAME.TNN01);
 
-  await translatorPages.editReview.selectBook(Inputs.BOOKS.MARK);
-  await translatorPages.editReview.enterTextInEditor(await translatorPages.editReview.getRandomVerseText());
-  await translatorPages.synchronization.wait('minWait');
-  await translatorPages.synchronization.navigateToSyncWithParatext();
-  await translatorPages.synchronization.clickSyncButton();
-  await translatorPages.synchronization.visibleSyncProgress(Inputs.PROJECT_NAME.TNN01);
+  await translatorRolePages.editReview.selectBook(Inputs.BOOKS.MARK);
+  await translatorRolePages.editReview.enterTextInEditor(await translatorRolePages.editReview.getRandomVerseText());
   
-  await translatorPages.synchronization.wait('minWait');
-  await translatorPages.synchronization.cancelSyncButton();
+  await translatorRolePages.synchronization.wait('minWait');
+  await translatorRolePages.synchronization.navigateToSyncWithParatext();
+  await translatorRolePages.synchronization.clickSyncButton();
+  await translatorRolePages.synchronization.visibleSyncProgress(Inputs.PROJECT_NAME.TNN01);
+  
+  await translatorRolePages.synchronization.wait('minWait');
+  await translatorRolePages.synchronization.cancelSyncButton();
 
-  const cancelMessage = await translatorPages.synchronization.getCancelMessage();
+  const cancelMessage = await translatorRolePages.synchronization.getCancelMessage();
   console.log('Cancel message:', cancelMessage);
   expect(cancelMessage).toBeDefined();
   expect(cancelMessage).not.toBe('');
 
-  await translatorPages.synchronization.wait('mediumWait');
-  await translatorPages.synchronization.clickSyncButton();
+  await translatorRolePages.synchronization.wait('mediumWait');
+  await translatorRolePages.synchronization.clickSyncButton();
   
-  await translatorPages.synchronization.hideSyncProgress(Inputs.PROJECT_NAME.TNN01);
-  await translatorPages.synchronization.waitForCancelMessageHidden(Inputs.PROJECT_NAME.TNN01);
+  await translatorRolePages.synchronization.hideSyncProgress(Inputs.PROJECT_NAME.TNN01);
+  await translatorRolePages.synchronization.waitForCancelMessageHidden(Inputs.PROJECT_NAME.TNN01);
   expect(cancelMessage).toContain('');
 
-  const snackBarMessage = await translatorPages.synchronization.getSnackBarMessage();
+  const snackBarMessage = await translatorRolePages.synchronization.getSnackBarMessage();
   console.log('Snack Bar message:', snackBarMessage);
   expect(snackBarMessage).toContain(`${Asserts.SNACK_BAR.SYNC_SUCCESS_MESSAGE}`);
   

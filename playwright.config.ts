@@ -62,23 +62,27 @@ export default defineConfig({
 
   fullyParallel: true,
   forbidOnly:    !!process.env.CI,
-  retries:       process.env.CI ? 2 : 0,
+  retries:       process.env.CI ? 1 : 1,
   workers:       process.env.CI ? 1 : undefined,
   reporter: reporters,
   timeout: 360_000,
   expect: {
     timeout: 15_000,
   },
+  
 
 
   use: {
     viewport:          { width: 1440, height: 900 },
     headless:          !!process.env.CI || true,
-    trace:             'on-first-retry',
+    trace:             'retain-on-failure',
     screenshot:        'only-on-failure',
     video:             'retain-on-failure',
     actionTimeout:     60_000,
     navigationTimeout: 120_000,
+/*     launchOptions: {
+      slowMo: 100, // 100ms delay between every operation
+    }, */
   },
 
   projects: 

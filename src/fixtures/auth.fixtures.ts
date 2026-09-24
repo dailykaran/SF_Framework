@@ -4,7 +4,6 @@ import * as fs from 'fs';
 import { createLogger, getSpecLogFilePath, releaseLogger, serializeError, writeLog } from '../utils/logger/logger';
 import type winston from 'winston';
 import { PageManager } from '../pages/pageManager';
-import { beforeAfterEach } from '../utils/beforeAfter/beforeAfterEach';
 
 /**
  * Auth fixtures — use these when a single test needs to act as
@@ -22,16 +21,16 @@ import { beforeAfterEach } from '../utils/beforeAfter/beforeAfterEach';
 
 type AuthFixtures = {
   logger: winston.Logger;
-  adminPage:    Page;
-  translatorPage:   Page;
-  reviewerPage: Page;
-  ccCheckerPage: Page;
+  adminRole:    Page;
+  translatorRole:   Page;
+  reviewerRole: Page;
+  ccCheckerRole: Page;
 
   // Page Managers per role
-  adminPages: PageManager;
-  translatorPages: PageManager;
-  reviewerPages: PageManager;
-  ccCheckerPages: PageManager;
+  adminRolePages: PageManager;
+  translatorRolePages: PageManager;
+  reviewerRolePages: PageManager;
+  ccCheckerRolePages: PageManager;
 };
 
 const AUTH = {
@@ -84,6 +83,18 @@ function addPageDiagnostics(page: Page, log: winston.Logger, role: string): void
   });
 }
 
+function checkAuthentication(SESSION_FILEPATH: string): void {
+  const sessionFile = path.resolve(SESSION_FILEPATH);
+  // Step 1: Check file exists on disk before use the page
+  if (!fs.existsSync(sessionFile)) {
+    test.skip(true, `session.json not found at: ${sessionFile}`);
+    return;
+  }else{
+    console.log(`session.json found at: ${sessionFile}`);
+  }
+} 
+
+
 export const test = base.extend<AuthFixtures>({
 
   logger: [async ({}, use, testInfo) => {
@@ -112,52 +123,52 @@ export const test = base.extend<AuthFixtures>({
       }
   }, { auto: true }],
 
-  adminPage: async ({ browser, logger }, use) => {
+  adminRole: async ({ browser, logger }, use) => {
     const page = await makeAuthPage(browser, AUTH.admin);
     addPageDiagnostics(page, logger, 'admin');
-    await new beforeAfterEach(page).checkAuthentication(SESSION_FILE.admin);
+    checkAuthentication(SESSION_FILE.admin);
     await use(page);
     await page.context().close();
   },
 
-  translatorPage: async ({ browser, logger }, use) => {
+  translatorRole: async ({ browser, logger }, use) => {
     const page = await makeAuthPage(browser, AUTH.translator);
     addPageDiagnostics(page, logger, 'translator');
-    await new beforeAfterEach(page).checkAuthentication(SESSION_FILE.translator);
+    checkAuthentication(SESSION_FILE.translator);
     await use(page);
     await page.context().close();
   },
 
-  reviewerPage: async ({ browser, logger }, use) => {
+  reviewerRole: async ({ browser, logger }, use) => {
     const page = await makeAuthPage(browser, AUTH.reviewer);
     addPageDiagnostics(page, logger, 'reviewer');
-    await new beforeAfterEach(page).checkAuthentication(SESSION_FILE.reviewer);
+    checkAuthentication(SESSION_FILE.reviewer);
     await use(page);
     await page.context().close();
   },
 
-  ccCheckerPage: async ({ browser, logger }, use) => {
+  ccCheckerRole: async ({ browser, logger }, use) => {
     const page = await makeAuthPage(browser, AUTH.ccChecker);
     addPageDiagnostics(page, logger, 'cc-checker');
-    await new beforeAfterEach(page).checkAuthentication(SESSION_FILE.ccChecker);
+    checkAuthentication(SESSION_FILE.ccChecker);
     await use(page);
     await page.context().close();
   },
 
-  adminPages: async ({ adminPage, logger }, use) => {
-    await use(new PageManager(adminPage, adminPage.context(), logger));
+  adminRolePages: async ({ adminRole, logger }, use) => {
+    await use(new PageManager(adminRole, adminRole.context(), logger));
   },
 
-  translatorPages: async ({ translatorPage, logger }, use) => {
-    await use(new PageManager(translatorPage, translatorPage.context(), logger));
+  translatorRolePages: async ({ translatorRole, logger }, use) => {
+    await use(new PageManager(translatorRole, translatorRole.context(), logger));
   },
 
-  reviewerPages: async ({ reviewerPage, logger }, use) => {
-    await use(new PageManager(reviewerPage, reviewerPage.context(), logger));
+  reviewerRolePages: async ({ reviewerRole, logger }, use) => {
+    await use(new PageManager(reviewerRole, reviewerRole.context(), logger));
   },
 
-  ccCheckerPages: async ({ ccCheckerPage, logger }, use) => {
-    await use(new PageManager(ccCheckerPage, ccCheckerPage.context(), logger));
+  ccCheckerRolePages: async ({ ccCheckerRole, logger }, use) => {
+    await use(new PageManager(ccCheckerRole, ccCheckerRole.context(), logger));
   },
   
 });
