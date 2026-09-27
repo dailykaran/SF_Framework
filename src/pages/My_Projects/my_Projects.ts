@@ -53,9 +53,6 @@ export class MyProjectsPage extends PlaywrightWrapper {
   async adminConnectProjects(projectName: string): Promise<void> {
     await test.step(`SF admin connect project: ${projectName}`, async () => {
       this.logger.info('SF admin connect project', { projectName });
-      if (process.env.ADMIN) {
-        await this.loadLocalStorageFromFile(`${process.env.ADMIN}`);
-      }
       await this.openProjects();
       await this.locateProjectByFilter(projectName, `${Selectors.MY_PROJECTS.UNCONNECTED_PROJECT}`, Inputs.BUTTONS.CONNECT);
            
@@ -75,9 +72,6 @@ export class MyProjectsPage extends PlaywrightWrapper {
   async adminDeleteProject(projectName: string): Promise<void> {
     await test.step(`SF admin delete project: ${projectName}`, async () => {
       this.logger.info('SF admin delete project', { projectName });
-      if (process.env.ADMIN) {
-        await this.loadLocalStorageFromFile(`${process.env.ADMIN}`);
-      }
       await this.openProjects();
       await this.selectProject(projectName);
               
@@ -92,9 +86,6 @@ export class MyProjectsPage extends PlaywrightWrapper {
   async joinProject(projectName: string): Promise<void> {
     await test.step(`A PT user join project: ${projectName}`, async () => {
       this.logger.info('A PT user join project', { projectName });
-      if (process.env.TRANSLATOR) {
-        await this.loadLocalStorageFromFile(`${process.env.TRANSLATOR}`);
-      }
       await this.openProjects();
       await this.locateProjectByFilter(projectName, `${Selectors.MY_PROJECTS.UNCONNECTED_PROJECT}`, Inputs.BUTTONS.JOIN);
       await this.smartWait.waitForNetworkIdle(3000);

@@ -60,8 +60,9 @@ export class EditReviewPage extends PlaywrightWrapper {
       await this.smartWait.waitForNetworkIdle();
       await this.getByClass(Selectors.EDIT_REVIEW.CHAPTER_SELECT).click({force: true});     
       await this.page.locator(Selectors.EDIT_REVIEW.CHAPTER_LIST_BOX)
-                .filter({ has: this.page.locator(Selectors.EDIT_REVIEW.CHAPTER_LIST_BOX_TEXT, { hasText: `${chapter.trim()}` }) })
+                .filter({ has: this.page.locator(Selectors.EDIT_REVIEW.CHAPTER_LIST_BOX_TEXT)}).getByText(`${chapter.trim()}`, {exact: true })
                 .click({force: true});
+                //{ hasText: `${chapter.trim()}`}
 
       const editor = this.page.locator(Selectors.EDIT_REVIEW.VERSE_SELECT).nth(Number(verse) - 1);
       await editor.clear();

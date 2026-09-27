@@ -111,6 +111,7 @@ export class LoginUsers {
         log.info('Starting Paratext login (persistent profile)', { email });
         await this.page.setDefaultNavigationTimeout(90000);
         await this.page.goto(this.baseUrl);
+        await this.page.waitForLoadState('networkidle');
         await expect(this.page).toHaveTitle(/Scripture Forge/);
 
         if (!this.isOnProjectsPage()) {
