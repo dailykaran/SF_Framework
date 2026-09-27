@@ -159,7 +159,7 @@ export abstract class PlaywrightWrapper {
     * @param {string} locator - The locator for the element.
     * @returns {Promise<string | null | any>} - The text content of the element, or null if none is found.
     */
-    async getTextContent(locator: string): Promise<string | null | any> {
+    async getTextContent(locator: string): Promise<string | null> {
         return await this.page.locator(locator).textContent();
     }
 
@@ -421,7 +421,7 @@ export abstract class PlaywrightWrapper {
                 this.logger.info(`${elementName} is visible as expected.`);
                 await expect(element).toBeVisible();
             } else {
-                this.logger.error(`${elementName} is not visible.`);
+                throw new Error(`${elementName} is not visible.`);    
             }
         } catch (error) {
             this.logger.error(`Error validating visibility of ${elementName}: ${error}`);

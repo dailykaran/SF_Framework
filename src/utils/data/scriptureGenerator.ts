@@ -28,6 +28,16 @@ export function getRandomReference(): ScriptureReference {
   return getReferenceForChapter(book.name, chapter);
 }
 
+
+export function getReferenceForBook(book: string): ScriptureReference {
+  const match = BOOKS.find((b) => b.name.toLowerCase() === book.toLowerCase());
+  if (!match) {
+    throw new Error(`Unknown Bible book: "${book}"`);
+  }
+  const chapter = faker.number.int({ min: 1, max: match.chapters });
+  return getReferenceForChapter(match.name, chapter);
+}
+
 /** Builds a reference with a random verse for a caller-supplied book/chapter, validating both exist. */
 export function getReferenceForChapter(book: string, chapter: number): ScriptureReference {
   const match = BOOKS.find((b) => b.name.toLowerCase() === book.toLowerCase());

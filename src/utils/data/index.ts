@@ -12,5 +12,6 @@ export {
   getRandomQuestionAnswers,
   getQuestionAnswerForChapter,
   getQuestionAnswersForChapter,
+  getReferenceForBook,
 } from './scriptureGenerator';
 export type { ScriptureReference, ScriptureVerse, ScriptureQuestionAnswer } from './scriptureGenerator';

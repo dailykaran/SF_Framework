@@ -8,8 +8,10 @@ import {
   getRandomQuestionAnswers,
   getQuestionAnswerForChapter,
   getQuestionAnswersForChapter,
+  getReferenceForBook,
 } from '../../src/utils/data';
 import { createLogger, getSpecLogFilePath } from '../../src/utils/logger/logger';
+import { EditReviewPage  } from '../../src/pages/Edit_Review/editReview';
 
 const log = createLogger('scripture-generator', getSpecLogFilePath(__filename));
 
@@ -25,6 +27,18 @@ test.describe('scripture data generator', () => {
     expect(ref.reference).toBe(`${ref.book} ${ref.chapter}:${ref.verse}`);
     log.info('Generated reference', { reference: ref.reference, book: ref.book, chapter: ref.chapter, verse: ref.verse });
   });
+
+  test('get a valid book by providing a random book', () => {
+    const ref = getReferenceForBook('Genesis');
+    const book = BOOKS.find((b) => b.name === ref.book);
+    expect(book).toBeDefined();
+    const data = { reference: ref.reference, book: ref.book, chapter: ref.chapter, verse: ref.verse };
+    log.info(data.book + ' ' + data.chapter + ' ' + data.verse);
+    
+/*     const ref2 = EditReviewPage.prototype.getReferenceForBookChapterVerse('Genesis');
+    log.info('Generated reference from EditReviewPage', ref2); */
+  });
+
 
   test('generates a verse with non-empty placeholder text', () => {
     const verse = getRandomVerse();
@@ -85,3 +99,4 @@ test.describe('scripture data generator', () => {
     expect(() => getQuestionAnswerForChapter('Jude', 2)).toThrow();
   });
 });
+

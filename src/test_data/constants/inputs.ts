@@ -3,6 +3,7 @@ export const Inputs = {
   // Projects name
   PROJECT_NAME: {
     F03: '- 03F',
+    //TNN01: '- TransDaugtherProject'
     TNN01: '- TestSF01 '
   },
 

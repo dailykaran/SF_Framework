@@ -124,33 +124,33 @@ export const test = base.extend<AuthFixtures>({
   }, { auto: true }],
 
   adminRole: async ({ browser, logger }, use) => {
+    checkAuthentication(SESSION_FILE.admin);
     const page = await makeAuthPage(browser, AUTH.admin);
     addPageDiagnostics(page, logger, 'admin');
-    checkAuthentication(SESSION_FILE.admin);
     await use(page);
     await page.context().close();
   },
 
   translatorRole: async ({ browser, logger }, use) => {
+    checkAuthentication(SESSION_FILE.translator);
     const page = await makeAuthPage(browser, AUTH.translator);
     addPageDiagnostics(page, logger, 'translator');
-    checkAuthentication(SESSION_FILE.translator);
     await use(page);
     await page.context().close();
   },
 
   reviewerRole: async ({ browser, logger }, use) => {
+    checkAuthentication(SESSION_FILE.reviewer);
     const page = await makeAuthPage(browser, AUTH.reviewer);
     addPageDiagnostics(page, logger, 'reviewer');
-    checkAuthentication(SESSION_FILE.reviewer);
     await use(page);
     await page.context().close();
   },
 
   ccCheckerRole: async ({ browser, logger }, use) => {
+    checkAuthentication(SESSION_FILE.ccChecker);
     const page = await makeAuthPage(browser, AUTH.ccChecker);
     addPageDiagnostics(page, logger, 'cc-checker');
-    checkAuthentication(SESSION_FILE.ccChecker);
     await use(page);
     await page.context().close();
   },

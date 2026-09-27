@@ -16,6 +16,11 @@ export const Asserts = {
     SYNC_SUCCESS_MESSAGE: 'Successfully synchronized',
   },
 
+  // synchronization
+  SYNCHRONIZATION: {
+    SYNC_ERROR_MESSAGE: 'Something went wrong the last time Scripture Forge'
+  },
+
   // Checking page
   CHECKING: {
     NAVIGATION_URL: 'checking',

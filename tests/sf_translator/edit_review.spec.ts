@@ -8,5 +8,5 @@ test('translator can open edit and review page', async ({
   await translatorRolePages.editReview.open(Inputs.PROJECT_NAME.F03);
   await translatorRolePages.editReview.navigateToEditReview();
   await expect(translatorRolePages.editReview.page).toHaveURL(new RegExp(`/${Asserts.EDIT_REVIEW.NAVIGATION_URL}/`));
-  expect(await translatorRolePages.editReview.configureTranslatorSettings()).not.toBeVisible();
+  expect(await translatorRolePages.editReview.configureTranslatorSettings()).toBeVisible();
 });

@@ -16,9 +16,13 @@ test('DOK-03: Add cancel for sync', async ({
 }) => {
   await translatorRolePages.myProjects.joinProject(Inputs.PROJECT_NAME.TNN01);
 
-  await translatorRolePages.editReview.selectBook(Inputs.BOOKS.MARK);
-  await translatorRolePages.editReview.enterTextInEditor(await translatorRolePages.editReview.getRandomVerseText());
+  const reference = await translatorRolePages.editReview.getReferenceForBookChapterVerse(Inputs.BOOKS.MARK);
+  const [book, chapter, verse] = reference.split(',');
   
+  await translatorRolePages.editReview.selectBook(book);
+  const editor = await translatorRolePages.editReview.enterTextInEditor(chapter, verse, await translatorRolePages.editReview.getRandomVerseText());
+  expect(editor).not.toBe('');
+
   await translatorRolePages.synchronization.wait('minWait');
   await translatorRolePages.synchronization.navigateToSyncWithParatext();
   await translatorRolePages.synchronization.clickSyncButton();
@@ -39,7 +43,7 @@ test('DOK-03: Add cancel for sync', async ({
   await translatorRolePages.synchronization.waitForCancelMessageHidden(Inputs.PROJECT_NAME.TNN01);
   expect(cancelMessage).toContain('');
 
-  const snackBarMessage = await translatorRolePages.synchronization.getSnackBarMessage();
+  const snackBarMessage = await translatorRolePages.sfComponents.getSnackBarMessage();
   console.log('Snack Bar message:', snackBarMessage);
   expect(snackBarMessage).toContain(`${Asserts.SNACK_BAR.SYNC_SUCCESS_MESSAGE}`);
   

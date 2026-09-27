@@ -5,6 +5,7 @@ import { MyProjectsPage } from './My_Projects/my_Projects';
 import { CommunityCheckerPage } from './Checking/community_Checker';
 import { SettingsPage } from './Settings/settings';
 import { SynchronizationPage } from './Synchronization/syncWithParatext';
+import { SF_Components } from '../components/sf_components';
 
 /**
  * PageManager provides lazy-instantiated access to all Page Objects
@@ -20,6 +21,7 @@ export class PageManager {
   private _communityCheckerPage?: CommunityCheckerPage;
   private _settingsPage?: SettingsPage;
   private _synchronizationPage?: SynchronizationPage;
+  private _sfComponents?: SF_Components;
 
   constructor(page: Page, context: BrowserContext, logger: winston.Logger) {
     this.page = page;
@@ -63,5 +65,13 @@ export class PageManager {
       this._synchronizationPage = new SynchronizationPage(this.page, this.context, this.logger);
     }
     return this._synchronizationPage;
+  }
+
+  /** SF Components page object */
+  get sfComponents(): SF_Components {
+    if (!this._sfComponents) {
+      this._sfComponents = new SF_Components(this.page, this.context, this.logger);
+    }
+    return this._sfComponents;
   }
 }

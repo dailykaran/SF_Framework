@@ -5,7 +5,7 @@ import { PlaywrightWrapper } from '../../base/base.page';
 import {SmartWait} from '../../utils/waits/smart-wait';
 import { Asserts } from '../../test_data/constants/asserts';
 import { Selectors } from '../../locators/selectors';
-import { BOOKS, getRandomReference, getRandomVerse,} from '../../utils/data';
+import { BOOKS, getRandomReference, getRandomVerse, getReferenceForBook,} from '../../utils/data';
 
 export class EditReviewPage extends PlaywrightWrapper {
   private readonly smartWait: SmartWait;
@@ -47,30 +47,30 @@ export class EditReviewPage extends PlaywrightWrapper {
     await test.step(`Select book: ${bookName}`, async () => {
       this.logger.info('Selecting book step', { bookName });
       await this.smartWait.waitForNetworkIdle();
-      await this.getByClass('.app-avatar-container app-avatar').click();
-      await this.getByClass('#book-select').click({force: true});
-      await this.getByClass('.mat-mdc-select-panel mat-option').filter({ hasText: bookName }).click({force: true});
+      await this.getByClass(Selectors.EDIT_REVIEW.AVATAR_QUILL).click();
+      await this.getByClass(Selectors.EDIT_REVIEW.BOOK_SELECT).click({force: true});
+      await this.getByClass(Selectors.EDIT_REVIEW.BOOK_LIST_BOX).filter({ hasText: bookName }).click({force: true});
       await this.smartWait.waitForNetworkIdle();
     });
   }
 
-  async enterTextInEditor(text: string): Promise<void> {
-    await test.step(`Enter text in editor: ${text}`, async () => {
-      this.logger.info('Entering text in editor step', { text });
+  async enterTextInEditor(chapter: string, verse: string, text: string): Promise<Locator> {
+    return await test.step(`Enter text in editor: ${text}`, async () => {
+      this.logger.info('Entering text in editor step', { chapter, verse, text });
       await this.smartWait.waitForNetworkIdle();
-      const editor = this.page.locator('usx-para-contents usx-segment').nth(6);
+      await this.getByClass(Selectors.EDIT_REVIEW.CHAPTER_SELECT).click({force: true});     
+      await this.page.locator(Selectors.EDIT_REVIEW.CHAPTER_LIST_BOX)
+                .filter({ has: this.page.locator(Selectors.EDIT_REVIEW.CHAPTER_LIST_BOX_TEXT, { hasText: `${chapter.trim()}` }) })
+                .click({force: true});
+
+      const editor = this.page.locator(Selectors.EDIT_REVIEW.VERSE_SELECT).nth(Number(verse) - 1);
       await editor.clear();
       await editor.fill(text);
+      await this.wait('minWait');
+      await this.page.keyboard.press('Tab');
+      await this.page.reload();
       await this.smartWait.waitForNetworkIdle();
-    });
-  }
-
-  async getRandomBook(): Promise<string> {
-    return await test.step('Get random book', async () => {
-      this.logger.info('Getting random book step');
-      const ref = getRandomReference();
-      const book = BOOKS.find((b) => b.name === ref.book);
-      return book?.name ?? ref.book;
+      return editor;
     });
   }
 
@@ -82,4 +82,12 @@ export class EditReviewPage extends PlaywrightWrapper {
     });
   }
 
+  async getReferenceForBookChapterVerse(bookName: string): Promise<string> {
+    return await test.step('Get reference for book, chapter, and verse', async () => {
+      this.logger.info('Getting reference for book, chapter, and verse step');
+      const ref = getReferenceForBook(bookName);
+      const data = {book: ref.book, chapter: ref.chapter, verse: ref.verse };
+      return `${data.book}, ${data.chapter}, ${data.verse}`;
+    });
+  }
 }

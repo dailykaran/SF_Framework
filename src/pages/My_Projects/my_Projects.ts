@@ -97,22 +97,11 @@ export class MyProjectsPage extends PlaywrightWrapper {
       }
       await this.openProjects();
       await this.locateProjectByFilter(projectName, `${Selectors.MY_PROJECTS.UNCONNECTED_PROJECT}`, Inputs.BUTTONS.JOIN);
+      await this.smartWait.waitForNetworkIdle(3000);
       await this.smartWait.waitForUrl(new RegExp(`/${Inputs.EDIT_REVIEW.NAVIGATION_URL}(/|$)`));
-      await this.smartWait.waitForNetworkIdle();
       await this.interactWithRole('link', Inputs.LINK.EDIT_REVIEW, 'click');
       await this.smartWait.waitForNetworkIdle();
-
-      //await this.handleConnectProjectProgress(projectName);
       
-    });
-  }
-
- async joinProjectTemp(projectName: string): Promise<void> {
-    await test.step(`A PT user join project: ${projectName}`, async () => {
-      this.logger.info('A PT user join project', { projectName });
-      if (process.env.TRANSLATOR) {
-        await this.loadLocalStorageFromFile(`${process.env.TRANSLATOR}`);
-      }
     });
   }
 

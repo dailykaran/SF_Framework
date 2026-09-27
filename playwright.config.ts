@@ -57,12 +57,12 @@ const browser_role_projects = browsers.flatMap(({ name: browserName, device }) =
 export default defineConfig({
   testDir: './tests',
 
-  globalSetup:    require.resolve('./tests/global_auth/global-setup.persistent-profile'), 
+  globalSetup:    require.resolve('./tests/global_auth/global-setup'),
   globalTeardown: require.resolve('./tests/global_auth/global-teardown'),
 
   fullyParallel: true,
   forbidOnly:    !!process.env.CI,
-  retries:       process.env.CI ? 1 : 1,
+  retries:       process.env.CI ? 1 : 0,
   workers:       process.env.CI ? 1 : undefined,
   reporter: reporters,
   timeout: 360_000,
@@ -78,11 +78,12 @@ export default defineConfig({
     trace:             'retain-on-failure',
     screenshot:        'only-on-failure',
     video:             'retain-on-failure',
+    serviceWorkers: 'block',
     actionTimeout:     60_000,
     navigationTimeout: 120_000,
-/*     launchOptions: {
-      slowMo: 100, // 100ms delay between every operation
-    }, */
+    launchOptions: {
+      slowMo: 100, // 150ms delay between every operation
+    }, 
   },
 
   projects: 

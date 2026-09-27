@@ -44,14 +44,14 @@ export class SynchronizationPage extends PlaywrightWrapper {
     async visibleSyncProgress(projectName: string): Promise<void> {
         await test.step(`Handle visible sync progress: ${projectName}`, async () => {
             this.logger.info('Handling visible sync progress ', { projectName });
-            await this.validateElementVisibility(Selectors.MY_PROJECTS.CONNECT_PROGRESS, 'Connect Progress');
+            await this.validateElementVisibility(Selectors.MY_PROJECTS.CONNECT_PROGRESS, 'wait for sync progress appears');
         });
     }
 
     async hideSyncProgress(projectName: string): Promise<void> {
         await test.step(`Handle hidden sync progress: ${projectName}`, async () => {
             this.logger.info('Handling hidden sync progress ', { projectName });
-            await this.waitForElementHidden(Selectors.MY_PROJECTS.CONNECT_PROGRESS, 'Connect Progress');
+            await this.waitForElementHidden(Selectors.MY_PROJECTS.CONNECT_PROGRESS, 'wait for sync progress disappears');
         });
     }
 
@@ -63,23 +63,14 @@ export class SynchronizationPage extends PlaywrightWrapper {
             return cancelMessage ?? '';
         });
     }
+    
     async waitForCancelMessageHidden(projectName: string): Promise<void> {
         await test.step(`Wait for Cancel message hidden: ${projectName}`, async () => {
             this.logger.info(`Waiting for cancel message hidden ${projectName}`);
             await this.smartWait.waitForNetworkIdle();
-            await this.waitForElementHidden(Selectors.SYNCHRONIZATION.CANCEL_MESSAGE, 'Sync Progress');
+            await this.waitForElementHidden(`#${Selectors.SYNCHRONIZATION.CANCEL_MESSAGE}`, 'Sync Error message');
 
         });
     }
-
-    async getSnackBarMessage(): Promise<string> {
-        return await test.step('Get Snack Bar message', async () => {
-            this.logger.info('Getting Snack Bar message step');
-            await this.smartWait.waitForNetworkIdle();
-            const snackBarMessage = await this.getByClass(`${Selectors.SYNCHRONIZATION.SNACK_BAR_MESSAGE}`).textContent();
-            return snackBarMessage ?? '';
-        });
-    }
-
 
 }

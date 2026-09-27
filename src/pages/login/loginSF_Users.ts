@@ -14,13 +14,16 @@ export class LoginUsers {
         this.baseUrl = baseUrl;
     }
 
+    private readonly URLTimeout = 40000; // Default timeout for URL navigation and waits
+    private readonly elementTimeout = 35000; // Default timeout for element visibility and interactions
+    private readonly assertionTimeout = 20000; // Default timeout for assertions
     /**
      * Core login workflow containing your automated steps.
      * We reuse this so we don't have to duplicate the 40+ lines of code for every user.
      */
     private async performParatextLogin(email: string, password: string) {
         log.info('Starting Paratext login', { email });
-        await this.page.setDefaultNavigationTimeout(90000); 
+        await this.page.setDefaultNavigationTimeout(this.URLTimeout); 
         await this.page.goto(this.baseUrl);
         
         // Verify page loads successfully
@@ -34,11 +37,11 @@ export class LoginUsers {
         
         // Click "Log in with Paratext" button
         const paratextButton = this.page.locator('a').filter({ hasText: 'Log in with Paratext' });
-        await expect(paratextButton).toBeVisible({ timeout: 5000 });
+        await expect(paratextButton).toBeVisible({ timeout: this.elementTimeout });
         await paratextButton.click();
         
         // Wait for Paratext authorization page
-        await this.page.waitForURL('**https://registry.paratext.org/auth?**', { timeout: 20000 });
+        await this.page.waitForURL('**https://registry.paratext.org/auth?**', { timeout: this.URLTimeout });
         
         // Verify redirect to Authorise Application page
         const authHeading = this.page.getByRole('heading', { name: 'Authorise Application' });
@@ -52,13 +55,13 @@ export class LoginUsers {
         await emailInput.press('Enter');
         
         // Google email verification
-        await this.page.waitForURL('**/accounts.google.com/v3/signin/identifier**', { timeout: 25000 });
+        await this.page.waitForURL('**/accounts.google.com/v3/signin/identifier**', { timeout: this.URLTimeout });
         const nextButton = this.page.getByRole('button', { name: 'Next' }).first();
         await expect(nextButton).toBeVisible();
         await nextButton.click();
         
         // Enter Google password
-        await this.page.waitForURL('**/accounts.google.com/v3/signin/challenge/pwd**', { timeout: 25000 });
+        await this.page.waitForURL('**/accounts.google.com/v3/signin/challenge/pwd**', { timeout: this.URLTimeout });
         const googlePasswordInput = this.page.locator('input[type="password"]');
         await googlePasswordInput.fill(password);
         
@@ -66,12 +69,12 @@ export class LoginUsers {
         await nextPasswordButton.click();
 
         // Wait for Scripture Forge projects page
-        await this.page.waitForURL('**/qa.scriptureforge.org/projects', { timeout: 35000, waitUntil: 'networkidle' });
-        await this.page.waitForSelector('h2:has-text("Connected")', { timeout: 10000 });
+        await this.page.waitForURL('**/qa.scriptureforge.org/projects', { timeout: this.URLTimeout, waitUntil: 'networkidle' });
+        await this.page.waitForSelector('h2:has-text("Connected")', { timeout: this.elementTimeout });
 
         // Wait for APIs and elements to load (Fixed syntax: changed commas to semicolons)
-        await this.page.waitForResponse(response => response.url().includes('/paratext-api/projects'), { timeout: 15000 });
-        await this.page.locator('.project-name').first().waitFor({state: 'visible', timeout: 15000});
+        await this.page.waitForResponse(response => response.url().includes('/paratext-api/projects'), { timeout: this.URLTimeout });
+        await this.page.locator('.project-name').first().waitFor({state: 'visible', timeout: this.elementTimeout});
         
         await expect(this.page).toHaveURL(/.*projects/);
         await expect(this.page.locator('.content h1')).toContainText('My projects');
@@ -91,8 +94,8 @@ export class LoginUsers {
                
         // Submit form by pressing Enter
         await this.page.getByRole('button', { name: 'Log In' }).click();
-        await this.page.waitForURL('**/qa.scriptureforge.org/projects', { timeout: 35000, waitUntil: 'networkidle' });
-        await this.page.waitForSelector('h2:has-text("Connected")', { timeout: 10000 });
+        await this.page.waitForURL('**/qa.scriptureforge.org/projects', { timeout: this.URLTimeout, waitUntil: 'networkidle' });
+        await this.page.waitForSelector('h2:has-text("Connected")', { timeout: this.elementTimeout });
         
         await expect(this.page).toHaveURL(/.*projects/);
         await expect(this.page.locator('.content h1')).toContainText('My projects');
@@ -116,14 +119,14 @@ export class LoginUsers {
             await this.page.waitForLoadState('networkidle');
 
             if (!this.isOnProjectsPage()) {
-                await this.page.waitForTimeout(20000);
+                await this.page.waitForTimeout(5000);
                 const paratextButton = this.page.locator('a').filter({ hasText: 'Log in with Paratext', visible: true });
                 await expect(paratextButton).toBeVisible();
                 await paratextButton.click();
 
                 await Promise.race([
-                    this.page.waitForURL('**https://registry.paratext.org/auth?**', { timeout: 20000 }),
-                    this.page.waitForURL('**/projects', { timeout: 20000 }),
+                    this.page.waitForURL('**https://registry.paratext.org/auth?**', { timeout: this.URLTimeout }),
+                    this.page.waitForURL('**/projects', { timeout: this.URLTimeout }),
                 ]);
 
                 if (!this.isOnProjectsPage()) {
@@ -135,8 +138,8 @@ export class LoginUsers {
                     await emailInput.press('Enter');
 
                     await Promise.race([
-                        this.page.waitForURL('**/accounts.google.com/v3/signin/identifier**', { timeout: 25000 }),
-                        this.page.waitForURL('**/projects', { timeout: 25000 }),
+                        this.page.waitForURL('**/accounts.google.com/v3/signin/identifier**', { timeout: this.URLTimeout }),
+                        this.page.waitForURL('**/projects', { timeout: this.URLTimeout }),
                     ]);
 
                     if (!this.isOnProjectsPage()) {
@@ -145,8 +148,8 @@ export class LoginUsers {
                         await nextButton.click();
 
                         await Promise.race([
-                            this.page.waitForURL('**/accounts.google.com/v3/signin/challenge/pwd**', { timeout: 25000 }),
-                            this.page.waitForURL('**/projects', { timeout: 25000 }),
+                            this.page.waitForURL('**/accounts.google.com/v3/signin/challenge/pwd**', { timeout: this.URLTimeout }),
+                            this.page.waitForURL('**/projects', { timeout: this.URLTimeout }),
                         ]);
 
                         if (!this.isOnProjectsPage()) {
@@ -161,11 +164,11 @@ export class LoginUsers {
             log.info('Persistent profile already authenticated - skipping login form');
         }
 
-        await this.page.waitForURL('**/qa.scriptureforge.org/projects', { timeout: 35000, waitUntil: 'networkidle' });
-        await this.page.waitForSelector('h2:has-text("Connected")', { timeout: 10000 });
+        await this.page.waitForURL('**/qa.scriptureforge.org/projects', { timeout: this.URLTimeout, waitUntil: 'networkidle' });
+        await this.page.waitForSelector('h2:has-text("Connected")', { timeout: this.elementTimeout });
         // Already-authenticated persistent profiles can load the projects API before this listener attaches, so don't block on it
-        await this.page.waitForResponse(response => response.url().includes('/paratext-api/projects'), { timeout: 15000 }).catch(() => {});
-        await this.page.locator('.project-name').first().waitFor({ state: 'visible', timeout: 15000 });
+        await this.page.waitForResponse(response => response.url().includes('/paratext-api/projects'), { timeout: this.URLTimeout }).catch(() => {});
+        await this.page.locator('.project-name').first().waitFor({ state: 'visible', timeout: this.elementTimeout });
 
         await expect(this.page).toHaveURL(/.*projects/);
         await expect(this.page.locator('.content h1')).toContainText('My projects');
@@ -191,8 +194,8 @@ export class LoginUsers {
             log.info('Persistent profile already authenticated - skipping login form');
         }
 
-        await this.page.waitForURL('**/qa.scriptureforge.org/projects', { timeout: 35000, waitUntil: 'networkidle' });
-        await this.page.waitForSelector('h2:has-text("Connected")', { timeout: 10000 });
+        await this.page.waitForURL('**/qa.scriptureforge.org/projects', { timeout: this.URLTimeout, waitUntil: 'networkidle' });
+        await this.page.waitForSelector('h2:has-text("Connected")', { timeout: this.elementTimeout });
 
         await expect(this.page).toHaveURL(/.*projects/);
         await expect(this.page.locator('.content h1')).toContainText('My projects');

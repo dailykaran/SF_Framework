@@ -9,6 +9,14 @@ export const Selectors = {
   // Edit & Review
   EDIT_REVIEW: {
     CONFIG_SETTINGS_BUTTON: '#settings-btn',
+    AVATAR_QUILL: '.app-avatar-container app-avatar',
+    BOOK_SELECT: '#book-select',
+    BOOK_LIST_BOX: '.mat-mdc-select-panel mat-option',
+
+    CHAPTER_SELECT: '#chapter-select',
+    CHAPTER_LIST_BOX: 'mat-option',
+    CHAPTER_LIST_BOX_TEXT: 'span.mdc-list-item__primary-text',
+    VERSE_SELECT: 'usx-para-contents usx-segment',
   },
 
   // Synchronization page
