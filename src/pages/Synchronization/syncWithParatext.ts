@@ -1,4 +1,4 @@
-import { type Page, BrowserContext, test } from '@playwright/test';
+import { type Page, BrowserContext, Locator, test } from '@playwright/test';
 import type winston from 'winston';
 
 import { PlaywrightWrapper } from '../../base/base.page';
@@ -59,16 +59,26 @@ export class SynchronizationPage extends PlaywrightWrapper {
         return await test.step('Get Cancel message', async () => {
             this.logger.info('Getting Cancel message step');
             await this.smartWait.waitForNetworkIdle();
+            await this.waitSelector(`#${Selectors.SYNCHRONIZATION.CANCEL_MESSAGE}`);
             const cancelMessage = await this.getById(`${Selectors.SYNCHRONIZATION.CANCEL_MESSAGE}`).textContent();
             return cancelMessage ?? '';
         });
     }
     
+    async getSyncCancelElement(): Promise<Locator> {
+        return await test.step('Get Cancel message element', async () => {
+            this.logger.info('Getting Cancel message element step');
+            await this.smartWait.waitForNetworkIdle();
+            const cancelMessage = this.getById(`${Selectors.SYNCHRONIZATION.CANCEL_MESSAGE}`);
+            return cancelMessage;
+        });
+    }
     async waitForCancelMessageHidden(projectName: string): Promise<void> {
         await test.step(`Wait for Cancel message hidden: ${projectName}`, async () => {
             this.logger.info(`Waiting for cancel message hidden ${projectName}`);
             await this.smartWait.waitForNetworkIdle();
             await this.waitForElementHidden(`#${Selectors.SYNCHRONIZATION.CANCEL_MESSAGE}`, 'Sync Error message');
+            await this.smartWait.waitForNetworkIdle();
 
         });
     }

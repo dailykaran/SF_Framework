@@ -70,8 +70,6 @@ export default defineConfig({
     timeout: 15_000,
   },
   
-
-
   use: {
     viewport:          { width: 1440, height: 900 },
     headless:          !!process.env.CI || true,

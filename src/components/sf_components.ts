@@ -18,6 +18,7 @@ export class SF_Components extends PlaywrightWrapper {
         return await test.step('Get Snack Bar message', async () => {
             this.logger.info('Getting Snack Bar message step');
             await this.smartWait.waitForNetworkIdle();
+            await this.waitSelector(`${Selectors.SYNCHRONIZATION.SNACK_BAR_MESSAGE}`);
             const snackBarMessage = await this.getByClass(`${Selectors.SYNCHRONIZATION.SNACK_BAR_MESSAGE}`).textContent();
             return snackBarMessage ?? '';
         });

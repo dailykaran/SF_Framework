@@ -5,6 +5,7 @@ import * as path from 'path';
 import { clearFrameworkLog, createLogger, pruneOldLogs, serializeError } from '../../src/utils/logger/logger';
 
 const log = createLogger('global-setup');
+const EXPIRY_BUFFER_SECONDS = 300;
 
 /**
  * EXPERIMENTAL — persistent Chrome profile variant of global-setup.ts.
@@ -63,6 +64,47 @@ const USERS: UserConfig[] = [
 ];
 
 /**
+ * Define about isStorageStateValid: checks if the storage state file exists and 
+ * if the cookies within it are still valid based on their expiry times. 
+ * Returns true if the storage state is valid, false otherwise.
+*/
+function isStorageStateValid(filePath: string): boolean {
+  let state: {
+    cookies?: Array<{ name: string; expires: number }>;
+  };
+
+  try {
+    const raw = fs.readFileSync(filePath, 'utf-8');
+    if (!raw.trim()) return false;
+    state = JSON.parse(raw);
+  } catch {
+    return false; // unreadable or malformed JSON — treat as expired
+  }
+
+  // Anything expiring within the buffer window is treated as already expired
+  const cutoff = Math.floor(Date.now() / 1000) + EXPIRY_BUFFER_SECONDS;
+
+  // ── Check: Cookie expiry ───────────────────────────────────────────────
+  for (const cookie of (state.cookies ?? [])) {
+    if (
+      typeof cookie.expires === 'number' &&
+      cookie.expires !== -1 &&          // -1 = session cookie, no expiry
+      cookie.expires < cutoff
+    ) {
+      log.warn(
+        `   ⚠️  [cookie]     "${cookie.name}" expired at ` +
+        `${new Date(cookie.expires * 1000).toISOString()}`,
+      );
+      return false;
+    }
+  }
+
+  return true;
+}
+
+
+
+/**
  * Runs the Auth0 login flow for one user through a persistent Chrome profile
  * and writes the authenticated session to disk.
  */
@@ -109,10 +151,23 @@ async function performLogin(user: UserConfig): Promise<void> {
 
 async function loginUser(user: UserConfig): Promise<void> {
 
-  // ── no credentials in .env → skip this role entirely ──────────────────────
+  // ── Path 0: no credentials in .env → skip this role entirely ───────────────────
   if (!user.email || !user.password) {
     log.warn(`[${user.role}] skipping login - no credentials set in .env`);
     return;
+  }
+
+  // ── Path 1: JSON does not exist → login and create file ──────────────────
+  if (!fs.existsSync(user.file)) {
+     log.info(`[${user.role}] no session file - logging in`);
+     await performLogin(user);
+     return;
+  }
+  
+  // ── Path 2: JSON exists → validate all 3 expiry sources ──────────────────
+  if (isStorageStateValid(user.file)) {
+     log.info(`[${user.role}] session valid - skipping login`);
+     return;
   }
 
   // Trust the persisted Chrome profile instead of the exported storageState's

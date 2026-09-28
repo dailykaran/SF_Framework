@@ -4,6 +4,7 @@ import * as fs from 'fs';
 import { createLogger, getSpecLogFilePath, releaseLogger, serializeError, writeLog } from '../utils/logger/logger';
 import type winston from 'winston';
 import { PageManager } from '../pages/pageManager';
+const log = createLogger('auth.fixtures');
 
 /**
  * Auth fixtures — use these when a single test needs to act as
@@ -33,18 +34,19 @@ type AuthFixtures = {
   ccCheckerRolePages: PageManager;
 };
 
-const AUTH = {
-  admin:    path.resolve(`${process.env.ADMIN}`),
-  translator:   path.resolve(`${process.env.TRANSLATOR}`),
-  reviewer: path.resolve(`${process.env.REVIEWER}`),
-  ccChecker: path.resolve(`${process.env.CC_CHECKER}`),
-} as const;
+function requireEnv(name: string): string {
+  const value = process.env[name];
+  if (!value) {
+    throw new Error(`Missing required environment variable: ${name}. Run global setup first.`);
+  }
+  return path.resolve(value);
+}
 
-const SESSION_FILE = {
-  admin: AUTH.admin,
-  translator: AUTH.translator,
-  reviewer: AUTH.reviewer,
-  ccChecker: AUTH.ccChecker,
+const AUTH = {
+  admin:    requireEnv('ADMIN'),
+  translator:   requireEnv('TRANSLATOR'),
+  reviewer: requireEnv('REVIEWER'),
+  ccChecker: requireEnv('CC_CHECKER'),
 } as const;
 
 /** Creates a new browser context pre-loaded with the given storageState. */
@@ -87,10 +89,9 @@ function checkAuthentication(SESSION_FILEPATH: string): void {
   const sessionFile = path.resolve(SESSION_FILEPATH);
   // Step 1: Check file exists on disk before use the page
   if (!fs.existsSync(sessionFile)) {
-    test.skip(true, `session.json not found at: ${sessionFile}`);
-    return;
+    throw new Error(`Auth session not found: ${sessionFile}. Run global setup first.`);
   }else{
-    console.log(`session.json found at: ${sessionFile}`);
+    log.info(`session.json found at: ${sessionFile}`);
   }
 } 
 
@@ -124,7 +125,7 @@ export const test = base.extend<AuthFixtures>({
   }, { auto: true }],
 
   adminRole: async ({ browser, logger }, use) => {
-    checkAuthentication(SESSION_FILE.admin);
+    checkAuthentication(AUTH.admin);
     const page = await makeAuthPage(browser, AUTH.admin);
     addPageDiagnostics(page, logger, 'admin');
     await use(page);
@@ -132,7 +133,7 @@ export const test = base.extend<AuthFixtures>({
   },
 
   translatorRole: async ({ browser, logger }, use) => {
-    checkAuthentication(SESSION_FILE.translator);
+    checkAuthentication(AUTH.translator);
     const page = await makeAuthPage(browser, AUTH.translator);
     addPageDiagnostics(page, logger, 'translator');
     await use(page);
@@ -140,7 +141,7 @@ export const test = base.extend<AuthFixtures>({
   },
 
   reviewerRole: async ({ browser, logger }, use) => {
-    checkAuthentication(SESSION_FILE.reviewer);
+    checkAuthentication(AUTH.reviewer);
     const page = await makeAuthPage(browser, AUTH.reviewer);
     addPageDiagnostics(page, logger, 'reviewer');
     await use(page);
@@ -148,7 +149,7 @@ export const test = base.extend<AuthFixtures>({
   },
 
   ccCheckerRole: async ({ browser, logger }, use) => {
-    checkAuthentication(SESSION_FILE.ccChecker);
+    checkAuthentication(AUTH.ccChecker);
     const page = await makeAuthPage(browser, AUTH.ccChecker);
     addPageDiagnostics(page, logger, 'cc-checker');
     await use(page);

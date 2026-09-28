@@ -21,7 +21,7 @@ test('DOK-03: Add cancel for sync', async ({
   
   await translatorRolePages.editReview.selectBook(book);
   const editor = await translatorRolePages.editReview.enterTextInEditor(chapter, verse, await translatorRolePages.editReview.getRandomVerseText());
-  expect(editor).not.toBe('');
+  expect(editor).not.toBeEmpty();
 
   await translatorRolePages.synchronization.wait('minWait');
   await translatorRolePages.synchronization.navigateToSyncWithParatext();
@@ -34,14 +34,15 @@ test('DOK-03: Add cancel for sync', async ({
   const cancelMessage = await translatorRolePages.synchronization.getCancelMessage();
   console.log('Cancel message:', cancelMessage);
   expect(cancelMessage).toBeDefined();
-  expect(cancelMessage).not.toBe('');
+  expect(cancelMessage).toContain(Asserts.SYNCHRONIZATION.SYNC_ERROR_MESSAGE);
 
-  await translatorRolePages.synchronization.wait('mediumWait');
+  await translatorRolePages.synchronization.page.reload();
+  await translatorRolePages.synchronization.wait('minWait');
   await translatorRolePages.synchronization.clickSyncButton();
   
   await translatorRolePages.synchronization.hideSyncProgress(Inputs.PROJECT_NAME.TNN01);
   await translatorRolePages.synchronization.waitForCancelMessageHidden(Inputs.PROJECT_NAME.TNN01);
-  expect(cancelMessage).toContain('');
+  expect(await translatorRolePages.synchronization.getSyncCancelElement()).not.toBeVisible();
 
   const snackBarMessage = await translatorRolePages.sfComponents.getSnackBarMessage();
   console.log('Snack Bar message:', snackBarMessage);

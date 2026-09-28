@@ -203,7 +203,7 @@ export abstract class PlaywrightWrapper {
     * @returns {Promise<string | null>} - The value of the attribute, or null if the attribute does not exist.
     */
     async fetchattribute(locator: string, attName: string) {
-        const eleValue = await this.page.$(locator);
+        const eleValue = await this.page.locator(locator);
         if (!eleValue) {
             return null;
         }
@@ -258,7 +258,7 @@ export abstract class PlaywrightWrapper {
     }
 
     async acceptAlert(Data: string) {
-        this.page.on("dialog", async (dialog) => {
+        this.page.once("dialog", async (dialog) => {
             dialog.message()
             await dialog.accept(Data);
             this.logger.info('Dialog Message:', dialog.message());
@@ -402,34 +402,31 @@ export abstract class PlaywrightWrapper {
     }
 
 
-    async waitForElementHidden(locator: string, type: string) {
+    async waitForElementHidden(locator: string, elementName: string) {
         try {
             await this.wait('minWait')
             await this.page.waitForSelector(locator, { state: 'hidden', timeout: 50000 });
-            this.logger.info(`Element with CSS "${type}" is hidden as expected.`);
+            this.logger.info(`Element "${elementName}" is hidden as expected.`);
         } catch (error) {
-            this.logger.error(`Element with CSS "${type}" is still visible.`);
+            this.logger.error(`Element "${elementName}" is still visible: ${error}`);
+            throw error;
         }
     }
 
 
-    async validateElementVisibility(locator: any, elementName: string) {
+    async validateElementVisibility(locator: string, elementName: string) {
         try {
             const element = this.page.locator(locator);
-            await this.page.waitForSelector(locator, { state: 'attached', timeout: 30000, strict: true });
-            if (await element.isVisible()) {
-                this.logger.info(`${elementName} is visible as expected.`);
-                await expect(element).toBeVisible();
-            } else {
-                throw new Error(`${elementName} is not visible.`);    
-            }
+            await expect(element).toBeVisible({ timeout: 30000 });
+            this.logger.info(`${elementName} is visible as expected.`);
         } catch (error) {
             this.logger.error(`Error validating visibility of ${elementName}: ${error}`);
+            throw error;
         }
     }
 
 
-    async uploadMultipleContent(fileName1: string, fileName2: string, locator: any) {
+    async uploadMultipleContent(fileName1: string, fileName2: string, locator: string) {
         const inputElementHandle = this.page.locator(locator)
         if (inputElementHandle) {
             await inputElementHandle.setInputFiles([path.resolve(__dirname, fileName1),
@@ -442,9 +439,13 @@ export abstract class PlaywrightWrapper {
     async samplefile(locator: string, Path: string,) {
         const filePath = path.resolve(__dirname, Path);
         const inputElementHandle = this.page.locator(locator);
-        const binaryFormat = fs.readFileSync(filePath, { encoding: 'binary' });
-        if (inputElementHandle) {
-            await inputElementHandle.setInputFiles(binaryFormat);
+        if (await inputElementHandle.count() > 0) {
+            const buffer = fs.readFileSync(filePath);
+            await inputElementHandle.setInputFiles({
+                name: path.basename(filePath),
+                mimeType: 'application/octet-stream',
+                buffer: buffer,
+            });
         } else {
             this.logger.error('Input element not found');
         }
@@ -561,21 +562,21 @@ export abstract class PlaywrightWrapper {
         this.page = (await this.context.pages())[this.context.pages().length - 1];
     }
 
-    switchToParentPage(): void {
+    async switchToParentPage(): Promise<void> {
         const pages = this.context.pages();
         if (pages.length > 0) {
             this.page = pages[0];
-            this.page.bringToFront();
+            await this.page.bringToFront();
         } else {
             throw new Error('Parent page is not available');
         }
     }
 
-    switchToChildPage(index: number): void {
+    async switchToChildPage(index: number): Promise<void> {
         const pages = this.context.pages();
         if (pages.length > index) {
             this.page = pages[index];
-            this.page.bringToFront();
+            await this.page.bringToFront();
         } else {
             throw new Error('Page at the specified index is not available');
         }
