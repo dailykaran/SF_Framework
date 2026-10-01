@@ -3,7 +3,8 @@ import * as path from 'path';
 import * as fs from 'fs';
 import { createLogger, getSpecLogFilePath, releaseLogger, serializeError, writeLog } from '../utils/logger/logger';
 import type winston from 'winston';
-import { EditReviewPage } from '../pages/Edit_Review/editReview';
+import { PageManager } from '../pages/pageManager';
+const log = createLogger('auth.fixtures');
 
 /**
  * Auth fixtures — use these when a single test needs to act as
@@ -13,29 +14,39 @@ import { EditReviewPage } from '../pages/Edit_Review/editReview';
  *
  *   import { test } from '../fixtures/auth.fixtures';
  *
- *   test('admin invites translator', async ({ adminPage, translatorPage }) => {
- *     await adminPage.goto('...');
- *     await translatorPage.goto('...');
+ *   test('admin invites translator', async ({ adminPages, translatorPages }) => {
+ *     await adminPages.myProjects.openProject('F03');
+ *     await translatorPages.editReview.open('F03');
  *   });
  */
 
 type AuthFixtures = {
   logger: winston.Logger;
-  adminPage:    Page;
-  translatorPage:   Page;
-  reviewerPage: Page;
-  ccCheckerPage: Page;
+  adminRole:    Page;
+  translatorRole:   Page;
+  reviewerRole: Page;
+  ccCheckerRole: Page;
 
-  adminEditReviewPage: EditReviewPage;
-  translatorEditReviewPage: EditReviewPage;
-  reviewerEditReviewPage: EditReviewPage;
+  // Page Managers per role
+  adminRolePages: PageManager;
+  translatorRolePages: PageManager;
+  reviewerRolePages: PageManager;
+  ccCheckerRolePages: PageManager;
 };
 
+function requireEnv(name: string): string {
+  const value = process.env[name];
+  if (!value) {
+    throw new Error(`Missing required environment variable: ${name}. Run global setup first.`);
+  }
+  return path.resolve(value);
+}
+
 const AUTH = {
-  admin:    path.resolve('.auth/sf-admin.json'),
-  translator:   path.resolve('.auth/sf-translator.json'),
-  reviewer: path.resolve('.auth/sf-reviewer.json'),
-  ccChecker: path.resolve('.auth/sf-cc-checker.json'),
+  admin:    requireEnv('ADMIN'),
+  translator:   requireEnv('TRANSLATOR'),
+  reviewer: requireEnv('REVIEWER'),
+  ccChecker: requireEnv('CC_CHECKER'),
 } as const;
 
 /** Creates a new browser context pre-loaded with the given storageState. */
@@ -45,7 +56,7 @@ async function makeAuthPage(
 ): Promise<Page> {
   const context = await browser.newContext({ 
     storageState: storageStatePath,
-    viewport: { width: 1920, height: 1080 }
+    viewport: { width: 1440, height: 900}
   });
   return context.newPage();
 }
@@ -73,6 +84,17 @@ function addPageDiagnostics(page: Page, log: winston.Logger, role: string): void
     });
   });
 }
+
+function checkAuthentication(SESSION_FILEPATH: string): void {
+  const sessionFile = path.resolve(SESSION_FILEPATH);
+  // Step 1: Check file exists on disk before use the page
+  if (!fs.existsSync(sessionFile)) {
+    throw new Error(`Auth session not found: ${sessionFile}. Run global setup first.`);
+  }else{
+    log.info(`session.json found at: ${sessionFile}`);
+  }
+} 
+
 
 export const test = base.extend<AuthFixtures>({
 
@@ -102,45 +124,54 @@ export const test = base.extend<AuthFixtures>({
       }
   }, { auto: true }],
 
-  adminPage: async ({ browser, logger }, use) => {
+  adminRole: async ({ browser, logger }, use) => {
+    checkAuthentication(AUTH.admin);
     const page = await makeAuthPage(browser, AUTH.admin);
     addPageDiagnostics(page, logger, 'admin');
     await use(page);
     await page.context().close();
   },
 
-  translatorPage: async ({ browser, logger }, use) => {
+  translatorRole: async ({ browser, logger }, use) => {
+    checkAuthentication(AUTH.translator);
     const page = await makeAuthPage(browser, AUTH.translator);
     addPageDiagnostics(page, logger, 'translator');
     await use(page);
     await page.context().close();
   },
 
-  reviewerPage: async ({ browser, logger }, use) => {
+  reviewerRole: async ({ browser, logger }, use) => {
+    checkAuthentication(AUTH.reviewer);
     const page = await makeAuthPage(browser, AUTH.reviewer);
     addPageDiagnostics(page, logger, 'reviewer');
     await use(page);
     await page.context().close();
   },
 
-  ccCheckerPage: async ({ browser, logger }, use) => {
+  ccCheckerRole: async ({ browser, logger }, use) => {
+    checkAuthentication(AUTH.ccChecker);
     const page = await makeAuthPage(browser, AUTH.ccChecker);
     addPageDiagnostics(page, logger, 'cc-checker');
     await use(page);
     await page.context().close();
   },
 
-  adminEditReviewPage: async ({ adminPage, logger }, use) => {
-    await use(new EditReviewPage(adminPage, adminPage.context(), logger));
+  adminRolePages: async ({ adminRole, logger }, use) => {
+    await use(new PageManager(adminRole, adminRole.context(), logger));
   },
 
-  translatorEditReviewPage: async ({ translatorPage, logger }, use) => {
-    await use(new EditReviewPage(translatorPage,  translatorPage.context(), logger));
+  translatorRolePages: async ({ translatorRole, logger }, use) => {
+    await use(new PageManager(translatorRole, translatorRole.context(), logger));
   },
 
-  reviewerEditReviewPage: async ({ reviewerPage, logger }, use) => {
-    await use(new EditReviewPage(reviewerPage, reviewerPage.context(), logger));
+  reviewerRolePages: async ({ reviewerRole, logger }, use) => {
+    await use(new PageManager(reviewerRole, reviewerRole.context(), logger));
   },
+
+  ccCheckerRolePages: async ({ ccCheckerRole, logger }, use) => {
+    await use(new PageManager(ccCheckerRole, ccCheckerRole.context(), logger));
+  },
+  
 });
 
-export { expect };
+export { expect, PageManager };

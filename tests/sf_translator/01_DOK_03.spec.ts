@@ -1,0 +1,52 @@
+import { test, expect } from '../../src/fixtures/auth.fixtures';
+import { Asserts } from '../../src/test_data/constants/asserts';
+import { Inputs } from '../../src/test_data/constants/inputs';
+
+test.beforeEach('DOK-03: SF admin setup for connecting a project', async ({ adminRolePages }) => {
+    await adminRolePages.myProjects.adminConnectProjects(Inputs.PROJECT_NAME.TNN01); 
+});
+
+test.afterEach('DOK-03: SF admin teardown for deleting a project', async ({ adminRolePages }) => {
+    await adminRolePages.myProjects.adminNavigateSettings(Inputs.PROJECT_NAME.TNN01);
+    await adminRolePages.settings.deleteProject(Inputs.PROJECT_NAME.TNN01);
+});
+
+test('DOK-03: Add cancel for sync', async ({
+  translatorRolePages
+}) => {
+  await translatorRolePages.myProjects.joinProject(Inputs.PROJECT_NAME.TNN01);
+
+  const reference = await translatorRolePages.editReview.getReferenceForBookChapterVerse(Inputs.BOOKS.MARK);
+  const [book, chapter, verse] = reference.split(',');
+  
+  await translatorRolePages.editReview.avatarEditorReview();
+  await translatorRolePages.editReview.selectBook(book);
+  const editor = await translatorRolePages.editReview.enterTextInEditor(chapter, verse, await translatorRolePages.editReview.getRandomVerseText());
+  expect(editor).not.toBeEmpty();
+
+  await translatorRolePages.synchronization.wait('minWait');
+  await translatorRolePages.synchronization.navigateToSyncWithParatext();
+  await translatorRolePages.synchronization.clickSyncButton();
+  await translatorRolePages.synchronization.visibleSyncProgress(Inputs.PROJECT_NAME.TNN01);
+  
+  await translatorRolePages.synchronization.wait('minWait');
+  await translatorRolePages.synchronization.cancelSyncButton();
+
+  const cancelMessage = await translatorRolePages.synchronization.getCancelMessage();
+  console.log('Cancel message:', cancelMessage);
+  expect(cancelMessage).toBeDefined();
+  expect(cancelMessage).toContain(Asserts.SYNCHRONIZATION.SYNC_ERROR_MESSAGE);
+
+  await translatorRolePages.synchronization.page.reload();
+  await translatorRolePages.synchronization.wait('minWait');
+  await translatorRolePages.synchronization.clickSyncButton();
+  
+  await translatorRolePages.synchronization.hideSyncProgress(Inputs.PROJECT_NAME.TNN01);
+  await translatorRolePages.synchronization.waitForCancelMessageHidden(Inputs.PROJECT_NAME.TNN01);
+  expect(await translatorRolePages.synchronization.getSyncCancelElement()).not.toBeVisible();
+
+  const snackBarMessage = await translatorRolePages.sfComponents.getSnackBarMessage();
+  console.log('Snack Bar message:', snackBarMessage);
+  expect(snackBarMessage).toContain(`${Asserts.SNACK_BAR.SYNC_SUCCESS_MESSAGE}`);
+  
+});

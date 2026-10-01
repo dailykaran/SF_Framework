@@ -1,7 +1,8 @@
 
 import { Page, test, expect, BrowserContext, Locator } from "@playwright/test";
 import * as path from 'path';
-import fs from 'fs';
+import * as fs from 'fs';
+import { resolve } from 'path';
 import type winston from 'winston';
 
 
@@ -24,6 +25,21 @@ export abstract class PlaywrightWrapper {
         this.logger = logger;
     }
 
+    /**
+     * Loads local storage data from a JSON file and sets it in the browser context.
+     * @param filePath The path to the JSON file containing the local storage data.
+     */
+    async loadLocalStorageFromFile(filePath: string): Promise<void> {
+        const storage = JSON.parse(
+          fs.readFileSync(resolve(filePath), 'utf-8')
+        );
+
+        await this.page.addInitScript((data) => {
+            for (const [key, value] of Object.entries(data)) {
+                globalThis.localStorage.setItem(key, typeof value === 'string' ? value : JSON.stringify(value));
+        }
+        }, storage);
+    }
 
     /**
    * Types into the specified textbox after clearing any existing text.
@@ -117,7 +133,7 @@ export abstract class PlaywrightWrapper {
     * 
     * @param {string} url - The URL to navigate to.
     */
-    public async loadApplication(url: string) {
+    public async loadPage(url: string) {
         try {
             await this.page.goto(url); // Increased timeout for 60 seconds
             this.logger.info(`Successfully loaded the URL: ${url}`);
@@ -143,7 +159,7 @@ export abstract class PlaywrightWrapper {
     * @param {string} locator - The locator for the element.
     * @returns {Promise<string | null | any>} - The text content of the element, or null if none is found.
     */
-    async getTextContent(locator: string): Promise<string | null | any> {
+    async getTextContent(locator: string): Promise<string | null> {
         return await this.page.locator(locator).textContent();
     }
 
@@ -187,7 +203,7 @@ export abstract class PlaywrightWrapper {
     * @returns {Promise<string | null>} - The value of the attribute, or null if the attribute does not exist.
     */
     async fetchattribute(locator: string, attName: string) {
-        const eleValue = await this.page.$(locator);
+        const eleValue = await this.page.locator(locator);
         if (!eleValue) {
             return null;
         }
@@ -242,7 +258,7 @@ export abstract class PlaywrightWrapper {
     }
 
     async acceptAlert(Data: string) {
-        this.page.on("dialog", async (dialog) => {
+        this.page.once("dialog", async (dialog) => {
             dialog.message()
             await dialog.accept(Data);
             this.logger.info('Dialog Message:', dialog.message());
@@ -386,34 +402,31 @@ export abstract class PlaywrightWrapper {
     }
 
 
-    async waitForElementHidden(locator: string, type: string) {
+    async waitForElementHidden(locator: string, elementName: string) {
         try {
             await this.wait('minWait')
-            await this.page.waitForSelector(locator, { state: 'hidden', timeout: 20000 });
-            this.logger.info(`Element with XPath "${type}" is hidden as expected.`);
+            await this.page.waitForSelector(locator, { state: 'hidden', timeout: 50000 });
+            this.logger.info(`Element "${elementName}" is hidden as expected.`);
         } catch (error) {
-            this.logger.error(`Element with XPath "${type}" is still visible.`);
+            this.logger.error(`Element "${elementName}" is still visible: ${error}`);
+            throw error;
         }
     }
 
 
-    async validateElementVisibility(locator: any, elementName: string) {
+    async validateElementVisibility(locator: string, elementName: string) {
         try {
             const element = this.page.locator(locator);
-            await this.page.waitForSelector(locator, { state: 'attached', timeout: 30000, strict: true });
-            if (await element.isVisible()) {
-                this.logger.info(`${elementName} is visible as expected.`);
-                await expect(element).toBeVisible();
-            } else {
-                this.logger.error(`${elementName} is not visible.`);
-            }
+            await expect(element).toBeVisible({ timeout: 30000 });
+            this.logger.info(`${elementName} is visible as expected.`);
         } catch (error) {
             this.logger.error(`Error validating visibility of ${elementName}: ${error}`);
+            throw error;
         }
     }
 
 
-    async uploadMultipleContent(fileName1: string, fileName2: string, locator: any) {
+    async uploadMultipleContent(fileName1: string, fileName2: string, locator: string) {
         const inputElementHandle = this.page.locator(locator)
         if (inputElementHandle) {
             await inputElementHandle.setInputFiles([path.resolve(__dirname, fileName1),
@@ -426,9 +439,13 @@ export abstract class PlaywrightWrapper {
     async samplefile(locator: string, Path: string,) {
         const filePath = path.resolve(__dirname, Path);
         const inputElementHandle = this.page.locator(locator);
-        const binaryFormat = fs.readFileSync(filePath, { encoding: 'binary' });
-        if (inputElementHandle) {
-            await inputElementHandle.setInputFiles(binaryFormat);
+        if (await inputElementHandle.count() > 0) {
+            const buffer = fs.readFileSync(filePath);
+            await inputElementHandle.setInputFiles({
+                name: path.basename(filePath),
+                mimeType: 'application/octet-stream',
+                buffer: buffer,
+            });
         } else {
             this.logger.error('Input element not found');
         }
@@ -545,21 +562,21 @@ export abstract class PlaywrightWrapper {
         this.page = (await this.context.pages())[this.context.pages().length - 1];
     }
 
-    switchToParentPage(): void {
+    async switchToParentPage(): Promise<void> {
         const pages = this.context.pages();
         if (pages.length > 0) {
             this.page = pages[0];
-            this.page.bringToFront();
+            await this.page.bringToFront();
         } else {
             throw new Error('Parent page is not available');
         }
     }
 
-    switchToChildPage(index: number): void {
+    async switchToChildPage(index: number): Promise<void> {
         const pages = this.context.pages();
         if (pages.length > index) {
             this.page = pages[index];
-            this.page.bringToFront();
+            await this.page.bringToFront();
         } else {
             throw new Error('Page at the specified index is not available');
         }
@@ -568,7 +585,7 @@ export abstract class PlaywrightWrapper {
         return this.page.locator(`#${locator}`)
     }
     getByClass(locator: string): Locator {
-        return this.page.locator(`[class='${locator}']`)
+        return this.page.locator(`${locator}`)
     }
 
 /**
@@ -761,6 +778,26 @@ export abstract class PlaywrightWrapper {
             default:
                 throw new Error(`Unsupported role: ${role}`);
         }
+    }
+
+    /**
+     * Explains the purpose of the goOffline and goOnline methods in the PlaywrightWrapper class.
+     * The goOffline method is used to simulate a network disconnection in the browser context, 
+     * effectively putting the application into an offline state. This can be useful for testing 
+     * how the application behaves when there is no internet connection.
+     */
+    async goOffline(): Promise<void> {
+        await test.step('Go offline (disable network)', async () => {
+            await this.context.setOffline(true);
+            this.logger.info('Network set to OFFLINE');
+        });
+    }
+
+    async goOnline(): Promise<void> {
+        await test.step('Go online (restore network)', async () => {
+            await this.context.setOffline(false);
+            this.logger.info('Network set to ONLINE');
+        });
     }
 
 
