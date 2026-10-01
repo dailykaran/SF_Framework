@@ -121,7 +121,7 @@ async function performLogin(user: UserConfig): Promise<void> {
 
   // launchPersistentContext (not launch + newContext) is what actually keeps the profile/cookies across runs
   const context = await chromium.launchPersistentContext(userDataDir, {
-    headless:  true,
+    headless:  false,
     args:       ['--no-sandbox'],
     viewport:   { width: 1280, height: 720 },
     userAgent:  FIXED_USER_AGENT,

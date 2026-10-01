@@ -73,6 +73,7 @@ export class SynchronizationPage extends PlaywrightWrapper {
             return cancelMessage;
         });
     }
+
     async waitForCancelMessageHidden(projectName: string): Promise<void> {
         await test.step(`Wait for Cancel message hidden: ${projectName}`, async () => {
             this.logger.info(`Waiting for cancel message hidden ${projectName}`);
@@ -83,4 +84,12 @@ export class SynchronizationPage extends PlaywrightWrapper {
         });
     }
 
+    async syncOfflineMessage(messageType: string): Promise<Locator> {
+        return await test.step(`Get Sync Offline message step \`${messageType}\``, async () => {
+            this.logger.info('Getting Sync Offline message step', { messageType });
+            await this.smartWait.waitForNetworkIdle();
+            const syncOfflineMessage = await this.getByClass(`.${Selectors.OFFLINE_DOM.SYNC_OFFLINE_MESSAGE}`);
+            return syncOfflineMessage ?? '';
+        });
+    }
 }

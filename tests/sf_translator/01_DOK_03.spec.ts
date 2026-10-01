@@ -2,12 +2,12 @@ import { test, expect } from '../../src/fixtures/auth.fixtures';
 import { Asserts } from '../../src/test_data/constants/asserts';
 import { Inputs } from '../../src/test_data/constants/inputs';
 
-test.beforeEach('SF admin setup for connecting a project', async ({ adminRolePages }) => {
+test.beforeEach('DOK-03: SF admin setup for connecting a project', async ({ adminRolePages }) => {
     await adminRolePages.myProjects.adminConnectProjects(Inputs.PROJECT_NAME.TNN01); 
 });
 
-test.afterEach('SF admin teardown for deleting a project', async ({ adminRolePages }) => {
-    await adminRolePages.myProjects.adminDeleteProject(Inputs.PROJECT_NAME.TNN01);
+test.afterEach('DOK-03: SF admin teardown for deleting a project', async ({ adminRolePages }) => {
+    await adminRolePages.myProjects.adminNavigateSettings(Inputs.PROJECT_NAME.TNN01);
     await adminRolePages.settings.deleteProject(Inputs.PROJECT_NAME.TNN01);
 });
 
@@ -19,6 +19,7 @@ test('DOK-03: Add cancel for sync', async ({
   const reference = await translatorRolePages.editReview.getReferenceForBookChapterVerse(Inputs.BOOKS.MARK);
   const [book, chapter, verse] = reference.split(',');
   
+  await translatorRolePages.editReview.avatarEditorReview();
   await translatorRolePages.editReview.selectBook(book);
   const editor = await translatorRolePages.editReview.enterTextInEditor(chapter, verse, await translatorRolePages.editReview.getRandomVerseText());
   expect(editor).not.toBeEmpty();

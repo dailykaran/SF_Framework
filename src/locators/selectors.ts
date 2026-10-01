@@ -26,6 +26,11 @@ export const Selectors = {
     SNACK_BAR_MESSAGE: 'simple-snack-bar',
   },
 
+  OFFLINE_DOM: {
+    SYNC_OFFLINE_MESSAGE: 'offline-text',
+    SETTINGS_OFFLINE_MESSAGE: 'offline-text',
+  },
+
   // My Projects page
   MY_PROJECTS: {
     UNCONNECTED_PROJECT: 'div.user-unconnected-project',

@@ -69,9 +69,9 @@ export class MyProjectsPage extends PlaywrightWrapper {
     });
   }
 
-  async adminDeleteProject(projectName: string): Promise<void> {
-    await test.step(`SF admin delete project: ${projectName}`, async () => {
-      this.logger.info('SF admin delete project', { projectName });
+  async adminNavigateSettings(projectName: string): Promise<void> {
+    await test.step(`SF admin navigate to settings page: ${projectName}`, async () => {
+      this.logger.info('SF admin navigate to settings page', { projectName });
       await this.openProjects();
       await this.selectProject(projectName);
               

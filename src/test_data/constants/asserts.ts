@@ -18,7 +18,14 @@ export const Asserts = {
 
   // synchronization
   SYNCHRONIZATION: {
-    SYNC_ERROR_MESSAGE: 'Something went wrong the last time Scripture Forge'
+    SYNC_ERROR_MESSAGE: 'Something went wrong the last time Scripture Forge',
+    SYNC_OFFLINE_MESSAGE: 'Please connect to the internet to synchronize this project',
+  },
+
+  // Settings
+  SETTINGS: {
+    OFFLINE_MESSAGE: 'Project settings cannot be changed while offline. Please connect to the internet to make changes.',
+    URL: 'settings',
   },
 
   // Checking page

@@ -1,4 +1,4 @@
-import {  type Page, BrowserContext, Locator, test } from '@playwright/test';
+import {  type Page, BrowserContext, Locator, test, expect } from '@playwright/test';
 import type winston from 'winston';
 
 import { PlaywrightWrapper } from '../../base/base.page';
@@ -43,11 +43,18 @@ export class EditReviewPage extends PlaywrightWrapper {
     return settingsButton;
   }
 
+  async avatarEditorReview(): Promise<void> {
+    await test.step('Avatar editor review', async () => {
+      this.logger.info('Avatar editor review step');
+      await this.smartWait.waitForNetworkIdle();
+      await this.getByClass(Selectors.EDIT_REVIEW.AVATAR_QUILL).click();
+    });
+  }
+
   async selectBook(bookName: string): Promise<void> {
     await test.step(`Select book: ${bookName}`, async () => {
       this.logger.info('Selecting book step', { bookName });
       await this.smartWait.waitForNetworkIdle();
-      await this.getByClass(Selectors.EDIT_REVIEW.AVATAR_QUILL).click();
       await this.getByClass(Selectors.EDIT_REVIEW.BOOK_SELECT).click({force: true});
       await this.getByClass(Selectors.EDIT_REVIEW.BOOK_LIST_BOX).filter({ hasText: bookName }).click({force: true});
       await this.smartWait.waitForNetworkIdle();
@@ -62,7 +69,6 @@ export class EditReviewPage extends PlaywrightWrapper {
       await this.page.locator(Selectors.EDIT_REVIEW.CHAPTER_LIST_BOX)
                 .filter({ has: this.page.locator(Selectors.EDIT_REVIEW.CHAPTER_LIST_BOX_TEXT)}).getByText(`${chapter.trim()}`, {exact: true })
                 .click({force: true});
-                //{ hasText: `${chapter.trim()}`}
 
       const editor = this.page.locator(Selectors.EDIT_REVIEW.VERSE_SELECT).nth(Number(verse) - 1);
       await editor.clear();
@@ -74,6 +80,35 @@ export class EditReviewPage extends PlaywrightWrapper {
       return editor;
     });
   }
+
+  async enterTextInEditorForMultipleVerses(chapter: string, verse: string): Promise<Locator> {
+    return await test.step(`Enter text in multiple verses on editor:`, async () => {
+      this.logger.info('Entering text in  multiple verses on editor step', { chapter, verse });
+      await this.smartWait.waitForNetworkIdle();
+      await this.getByClass(Selectors.EDIT_REVIEW.CHAPTER_SELECT).click({force: true});     
+      await this.page.locator(Selectors.EDIT_REVIEW.CHAPTER_LIST_BOX)
+                .filter({ has: this.page.locator(Selectors.EDIT_REVIEW.CHAPTER_LIST_BOX_TEXT)}).getByText(`${chapter.trim()}`, {exact: true })
+                .click({force: true});
+
+      const startVerse = 2 
+      verse = startVerse.toString();
+      const endVerse = 5
+      let editor: Locator;
+      for (let i = startVerse; i <= endVerse; i++) {
+        editor = this.page.locator(Selectors.EDIT_REVIEW.VERSE_SELECT).nth(i - 1);         
+        await editor.clear();
+        await editor.fill(await this.getRandomVerseText());
+        await this.wait('minWait');
+        await this.page.keyboard.press('Tab');
+        await this.smartWait.waitForNetworkIdle();
+        await expect(editor).not.toBeEmpty();
+      }
+      await this.page.reload();
+      await this.smartWait.waitForNetworkIdle();
+      return editor!;
+    });
+  }
+
 
   async getRandomVerseText(): Promise<string> {
     return await test.step('Get random verse text', async () => {

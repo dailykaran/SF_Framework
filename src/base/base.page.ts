@@ -780,6 +780,26 @@ export abstract class PlaywrightWrapper {
         }
     }
 
+    /**
+     * Explains the purpose of the goOffline and goOnline methods in the PlaywrightWrapper class.
+     * The goOffline method is used to simulate a network disconnection in the browser context, 
+     * effectively putting the application into an offline state. This can be useful for testing 
+     * how the application behaves when there is no internet connection.
+     */
+    async goOffline(): Promise<void> {
+        await test.step('Go offline (disable network)', async () => {
+            await this.context.setOffline(true);
+            this.logger.info('Network set to OFFLINE');
+        });
+    }
+
+    async goOnline(): Promise<void> {
+        await test.step('Go online (restore network)', async () => {
+            await this.context.setOffline(false);
+            this.logger.info('Network set to ONLINE');
+        });
+    }
+
 
 }
 

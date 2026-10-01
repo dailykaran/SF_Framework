@@ -31,6 +31,12 @@ export const Inputs = {
     NAVIGATION_URL: 'sync',
   },
 
+// Offline message
+  OFFLINE: {
+    MESSAGE_APPEAR: 'appears when offline',
+    MESSAGE_DISAPPEAR: 'disappears when online',
+  },
+
   // Questions & Answers page
   QUESTIONS_ANSWERS: {
     NAVIGATION_URL: 'checking',

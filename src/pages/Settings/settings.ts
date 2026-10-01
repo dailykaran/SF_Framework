@@ -1,4 +1,4 @@
-import { type Page, BrowserContext, test } from '@playwright/test';
+import { type Page, BrowserContext, test, Locator } from '@playwright/test';
 import type winston from 'winston';
 
 import { PlaywrightWrapper } from '../../base/base.page';
@@ -32,6 +32,15 @@ export class SettingsPage extends PlaywrightWrapper {
       await this.smartWait.waitForUrl(new RegExp(`/${Inputs.NAV.MY_PROJECTS}(/|$)`));
       await this.logger.info('A project has been deleted.');  
     });
+  }
+
+  async settingsOfflineMessage(messageType: string): Promise<Locator> {
+        return await test.step(`Get Sync Offline message step \`${messageType}\``, async () => {
+            this.logger.info('Getting Sync Offline message step', { messageType });
+            await this.smartWait.waitForNetworkIdle();
+            const syncOfflineMessage = await this.getByClass(`.${Selectors.OFFLINE_DOM.SETTINGS_OFFLINE_MESSAGE}`);
+            return syncOfflineMessage ?? '';
+        });
   }
 
 }
