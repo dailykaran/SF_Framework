@@ -81,7 +81,7 @@ export class EditReviewPage extends PlaywrightWrapper {
     });
   }
 
-  async enterTextInEditorForMultipleVerses(chapter: string, verse: string): Promise<Locator> {
+  async enterTextInEditorForMultipleVerses_Old(chapter: string, verse: string): Promise<Locator> {
     return await test.step(`Enter text in multiple verses on editor:`, async () => {
       this.logger.info('Entering text in  multiple verses on editor step', { chapter, verse });
       await this.smartWait.waitForNetworkIdle();
@@ -106,6 +106,45 @@ export class EditReviewPage extends PlaywrightWrapper {
       await this.page.reload();
       await this.smartWait.waitForNetworkIdle();
       return editor!;
+    });
+  }
+
+  async selectChapter(chapter: string): Promise<void> {
+    return await test.step(`Select chapter: ${chapter}`, async () => {
+      this.logger.info('Selecting chapter step', { chapter });
+      await this.getByClass(Selectors.EDIT_REVIEW.CHAPTER_SELECT).click({force: true});     
+      await this.page.locator(Selectors.EDIT_REVIEW.CHAPTER_LIST_BOX)
+                .filter({ has: this.page.locator(Selectors.EDIT_REVIEW.CHAPTER_LIST_BOX_TEXT)}).getByText(`${chapter.trim()}`, {exact: true })
+                .click({force: true});
+    });
+  }
+
+
+  async enterTextInEditorForMultipleVerses(verse: string): Promise<{ verseLocator: string[]; inputVerseText: string[] }> {
+    return await test.step(`Enter text in multiple verses on editor:`, async () => {
+      this.logger.info('Entering text in  multiple verses on editor step', { verse });
+      
+      await this.smartWait.waitForNetworkIdle();
+      await this.logger.info('Get a random verse number: ', { verse });
+      const startVerse = 2;
+      const endVerse = 5;
+      let editor: Locator;
+      const verseLocator: string[] = [];
+      const inputVerseText: string[] = [];
+      for (let i = startVerse; i <= endVerse; i++) {
+        editor = this.page.locator(Selectors.EDIT_REVIEW.VERSE_SELECT).nth(i - 1);         
+        await editor.clear();
+        const verseText = await this.getRandomVerseText();
+        await editor.fill(verseText);
+        inputVerseText.push(verseText);
+        verseLocator.push(await editor.innerText());
+        await this.wait('minWait');
+        await this.page.keyboard.press('Tab');
+        await this.smartWait.waitForNetworkIdle();
+        await expect(editor).not.toBeEmpty();
+      }
+           
+      return { verseLocator, inputVerseText };
     });
   }
 

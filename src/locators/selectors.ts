@@ -41,6 +41,12 @@ export const Selectors = {
     DANGER_ZONE: 'app-settings h2',
     DELETE_THIS_PROJECT_BUTTON: 'delete-btn',
     DELETE_DIALOG: 'mat-dialog-container',
-  }
+  },
+
+  // Questions and Answers page
+  QUESTIONS_AND_ANSWERS: {
+    QUESTION_PANE: '#questions-panel',
+    QUESTION_HIGHLIGHT: 'usx-segment.question-segment.highlight-segment',
+  },
 
 } as const;

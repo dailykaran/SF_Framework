@@ -80,7 +80,7 @@ export default defineConfig({
     actionTimeout:     60_000,
     navigationTimeout: 120_000,
     launchOptions: {
-      slowMo: 100, // 150ms delay between every operation
+      slowMo: 150, // 150ms delay between every operation
     }, 
   },
 

@@ -52,6 +52,22 @@ export function getReferenceForChapter(book: string, chapter: number): Scripture
   return { book: match.name, chapter, verse, reference: `${match.name} ${chapter}:${verse}` };
 }
 
+/** builds a reference with specific book, chapter and verse */
+export function getReferenceForBookChapterVerse(book: string, chapter: number, verse: number): ScriptureReference {
+  const match = BOOKS.find((b) => b.name.toLowerCase() === book.toLowerCase());
+  if (!match) {
+    throw new Error(`Unknown Bible book: "${book}"`);
+  }
+  if (chapter < 1 || chapter > match.chapters) {
+    throw new Error(`${match.name} has no chapter ${chapter} (valid range: 1-${match.chapters})`);
+  }
+  if (verse < 1 || verse > MAX_VERSES_PER_CHAPTER) {
+    throw new Error(`${match.name} ${chapter} has no verse ${verse} (valid range: 1-${MAX_VERSES_PER_CHAPTER})`);
+  }
+  return { book: match.name, chapter, verse, reference: `${match.name} ${chapter}:${verse}` };
+}
+
+
 /** Builds synthetic (non-scriptural) placeholder text shaped like a translated verse. */
 export function getRandomVerseText(): string {
   return faker.lorem.sentences({ min: 1, max: 3 });
@@ -90,4 +106,8 @@ export function getQuestionAnswerForChapter(book: string, chapter: number): Scri
 
 export function getQuestionAnswersForChapter(book: string, chapter: number, count: number): ScriptureQuestionAnswer[] {
   return Array.from({ length: count }, () => getQuestionAnswerForChapter(book, chapter));
+}
+
+export function getQuestionAnswerForBookChapterVerse(book: string, chapter: number, verse: number): ScriptureQuestionAnswer {
+  return buildQuestionAnswer(getReferenceForBookChapterVerse(book, chapter, verse));
 }

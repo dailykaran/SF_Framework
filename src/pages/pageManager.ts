@@ -1,8 +1,9 @@
 import { type Page, BrowserContext } from '@playwright/test';
 import type winston from 'winston';
-import { EditReviewPage } from './Edit_Review/editReview';
+import { EditReviewPage } from './Translate/editReview';
 import { MyProjectsPage } from './My_Projects/my_Projects';
-import { CommunityCheckerPage } from './Checking/community_Checker';
+import { ManageQuestionsPage } from './Community_Checker/manageQuestions';
+import { QuestionsAndAnswersPage } from './Community_Checker/questions_Answers';
 import { SettingsPage } from './Settings/settings';
 import { SynchronizationPage } from './Synchronization/syncWithParatext';
 import { SF_Components } from '../components/sf_components';
@@ -18,7 +19,8 @@ export class PageManager {
 
   private _editReviewPage?: EditReviewPage;
   private _myProjectsPage?: MyProjectsPage;
-  private _communityCheckerPage?: CommunityCheckerPage;
+  private _questionsAndAnswersPage?: QuestionsAndAnswersPage;
+  private _manageQuestionsPage?: ManageQuestionsPage;
   private _settingsPage?: SettingsPage;
   private _synchronizationPage?: SynchronizationPage;
   private _sfComponents?: SF_Components;
@@ -45,12 +47,19 @@ export class PageManager {
     return this._myProjectsPage;
   }
 
-  /** Community Checker page object */
-  get communityChecker(): CommunityCheckerPage {
-    if (!this._communityCheckerPage) {
-      this._communityCheckerPage = new CommunityCheckerPage(this.page, this.context, this.logger);
+  /** Questions & Answers page object */
+  get questionsAndAnswers(): QuestionsAndAnswersPage {
+    if (!this._questionsAndAnswersPage) {
+      this._questionsAndAnswersPage = new QuestionsAndAnswersPage(this.page, this.context, this.logger);
     }
-    return this._communityCheckerPage;
+    return this._questionsAndAnswersPage;
+  }
+  /** Manage Questions page object */
+  get manageQuestions(): ManageQuestionsPage {
+    if (!this._manageQuestionsPage) {
+      this._manageQuestionsPage = new ManageQuestionsPage(this.page, this.context, this.logger);
+    }
+    return this._manageQuestionsPage;
   }
   /** Settings page object */
   get settings(): SettingsPage {

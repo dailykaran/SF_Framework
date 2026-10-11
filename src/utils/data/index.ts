@@ -13,5 +13,6 @@ export {
   getQuestionAnswerForChapter,
   getQuestionAnswersForChapter,
   getReferenceForBook,
+  getQuestionAnswerForBookChapterVerse,
 } from './scriptureGenerator';
 export type { ScriptureReference, ScriptureVerse, ScriptureQuestionAnswer } from './scriptureGenerator';
