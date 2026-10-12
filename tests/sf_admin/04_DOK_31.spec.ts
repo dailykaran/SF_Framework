@@ -49,9 +49,9 @@ test('DOK-06: Synchronization stalls on retry if connection lost during previous
     const selectQuestion = await adminRolePages.questionsAndAnswers.selectQuestionOnPane(getQuestion.question);
     expect(selectQuestion).toContain(getQuestion.question);
 
-    await expect(await adminRolePages.questionsAndAnswers.getQuestionHighlight()).toHaveAttribute('data-segment', 'verse_1_1');
+    await expect(await adminRolePages.questionsAndAnswers.getQuestionHighlight()).toHaveAttribute(`${Asserts.QUESTIONS_AND_ANSWERS.QUESTION_HIGHLIGHT_COLOR_ATTRIBUTE}`, `${Asserts.QUESTIONS_AND_ANSWERS.CHAPTER1_VERSE_ONE}`);
     await adminRolePages.manageQuestions.wait('minWait');
-    //expect(await adminRolePages.questionsAndAnswers.getQuestionIcon()).toBe('rgb(255, 247, 255)');
+    expect(await adminRolePages.questionsAndAnswers.getQuestionIconColor()).toBe(`${Asserts.QUESTIONS_AND_ANSWERS.QUESTION_ICON_COLOR}`);
     expect(await adminRolePages.questionsAndAnswers.getQuestionIcon()).toBe(true);
 
     await adminRolePages.editReview.selectChapter(chapter2.toString());
@@ -60,11 +60,11 @@ test('DOK-06: Synchronization stalls on retry if connection lost during previous
     expect(selectQuestion1).toContain(getQuestion1.question);
 
     
-    expect(await adminRolePages.questionsAndAnswers.getQuestionHighlight()).toHaveAttribute('data-segment', 'verse_2_1');
+    expect(await adminRolePages.questionsAndAnswers.getQuestionHighlight()).toHaveAttribute(`${Asserts.QUESTIONS_AND_ANSWERS.QUESTION_HIGHLIGHT_COLOR_ATTRIBUTE}`, `${Asserts.QUESTIONS_AND_ANSWERS.CHAPTER2_VERSE_ONE}`);
     await adminRolePages.manageQuestions.wait('minWait');
-    //expect(await adminRolePages.questionsAndAnswers.getQuestionIcon()).toBe('rgb(255, 247, 255)');
+    expect(await adminRolePages.questionsAndAnswers.getQuestionIconColor()).toBe(`${Asserts.QUESTIONS_AND_ANSWERS.QUESTION_ICON_COLOR}`);
     
     expect(await adminRolePages.questionsAndAnswers.getQuestionIcon()).toBe(true);
-    expect(await adminRolePages.questionsAndAnswers.getQuestionHighlight()).toHaveAttribute('data-question-count', '2');
+    expect(await adminRolePages.questionsAndAnswers.getQuestionHighlight()).toHaveAttribute(`${Asserts.QUESTIONS_AND_ANSWERS.QUESTION_COUNT}`, '2');
   
 });

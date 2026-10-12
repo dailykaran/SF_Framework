@@ -43,10 +43,32 @@ export const Selectors = {
     DELETE_DIALOG: 'mat-dialog-container',
   },
 
+  // Manage Questions page
+  MANAGE_QUESTIONS: {
+    CHOOSE_BOOK_HEADER: '#bookPane h1',
+    CHOOSE_CHAPTER_HEADER: '#chapterPane h1',
+    CHOOSE_VERSE_HEADER: '#versePane h1',
+    START_REFERENCE: 'scripture-start',
+    START_REFERENCE_DOWN_ARROW: '.mat-mdc-form-field-icon-suffix button',
+    END_REFERENCE: 'scripture-end',
+    END_REFERENCE_DOWN_ARROW: '.mat-mdc-form-field-icon-suffix button',
+
+    CHOOSE_END_VERSE_HEADER: '#rangeEndPane div',
+
+    QUESTION_TEXTAREA: 'textarea',
+    QUESTION_SAVE_ANSWER_BUTTON: 'question-save-btn',
+
+    QUESTION_BOOK_ROW: '#text-with-questions-list .mat-expansion-indicator svg',
+    QUESTION_CHAPTER_ROW: '#text-with-questions-list .mat-expansion-panel-content-wrapper .mat-expansion-indicator svg',
+    QUESTION_CONTENT_ROW: '#text-with-questions-list span.overflow-ellipsis',
+  },
+
   // Questions and Answers page
   QUESTIONS_AND_ANSWERS: {
-    QUESTION_PANE: '#questions-panel',
+    QUESTION_SELECT_WITH_TEXT: '#questions-panel div.question-text',
     QUESTION_HIGHLIGHT: 'usx-segment.question-segment.highlight-segment',
+    
   },
+
 
 } as const;

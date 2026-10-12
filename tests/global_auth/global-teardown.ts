@@ -17,7 +17,10 @@ const AUTH_DIR = path.resolve('.auth');
 async function globalTeardown(): Promise<void> {
   const startOffset = getFrameworkLogSize();
   log.info('Global authentication teardown started');
-/* 
+
+  /*
+   * Remove all session files in the .auth directory.
+   */
   if (!fs.existsSync(AUTH_DIR)) return;
 
    const files = fs
@@ -29,7 +32,7 @@ async function globalTeardown(): Promise<void> {
     log.info('Removed session', { file });
   }
   // End of session removal loop 
- */
+ 
   log.info('Auth teardown complete');
   await appendFrameworkLogToSpecLogs(log, startOffset);
 }

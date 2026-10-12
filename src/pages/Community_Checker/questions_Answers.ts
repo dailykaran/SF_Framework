@@ -38,7 +38,7 @@ export class QuestionsAndAnswersPage extends PlaywrightWrapper {
         return await test.step('Select question on pane', async () => {
             this.logger.info('Selecting question on pane step');
             await this.smartWait.waitForNetworkIdle();
-            const questionLists = await this.getByClass('#questions-panel div.question-text').all();
+            const questionLists = await this.getByClass(`${Selectors.QUESTIONS_AND_ANSWERS.QUESTION_SELECT_WITH_TEXT}`).all();
             for (const question of questionLists) {
                 const content = await question.textContent();
                 if (content?.includes(questionText)) {
@@ -54,7 +54,7 @@ export class QuestionsAndAnswersPage extends PlaywrightWrapper {
     async getQuestionIconColor(): Promise<string> {
       return await test.step(`Get icon for question: `, async () => {
         this.logger.info('Getting question icon step', );
-        const questionElement = await this.page.locator('usx-segment.question-segment.highlight-segment').filter({ visible: true });
+        const questionElement = await this.page.locator(`${Selectors.QUESTIONS_AND_ANSWERS.QUESTION_HIGHLIGHT}`).filter({ visible: true });
         const questionIconColor = await questionElement.evaluate((el) =>
                         el.ownerDocument.defaultView?.getComputedStyle(el, '::before').color ?? ''
                       );
@@ -67,7 +67,7 @@ export class QuestionsAndAnswersPage extends PlaywrightWrapper {
       return await test.step(`Get icon for question: `, async () => {
         this.logger.info('Getting question icon step', );
         const iconRendered = await this.page
-          .locator('usx-segment.question-segment.highlight-segment')
+          .locator(`${Selectors.QUESTIONS_AND_ANSWERS.QUESTION_HIGHLIGHT}`)
           .filter({ visible: true })
           .evaluate((el) => {
             const style = el.ownerDocument.defaultView?.getComputedStyle(el, '::before');

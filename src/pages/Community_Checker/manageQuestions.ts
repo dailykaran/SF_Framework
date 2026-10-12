@@ -6,6 +6,7 @@ import { SmartWait } from '../../utils/waits/smart-wait';
 import { Inputs } from '../../test_data/constants/inputs';
 import { Asserts } from '../../test_data/constants/asserts';
 import { getQuestionAnswerForBookChapterVerse } from '../../utils/data';
+import { Selectors } from '../../locators/selectors';
 
 export class ManageQuestionsPage extends PlaywrightWrapper {
     private readonly smartWait: SmartWait;
@@ -24,7 +25,7 @@ export class ManageQuestionsPage extends PlaywrightWrapper {
       });
     }
 
-    async addQuestion(): Promise<void> {
+    async openAddQuestion(): Promise<void> {
         await test.step('Add a new question', async () => {
             this.logger.info('Adding a new question step');
             await this.smartWait.waitForNetworkIdle();
@@ -38,7 +39,7 @@ export class ManageQuestionsPage extends PlaywrightWrapper {
         await test.step('Choose a verse', async () => {
             this.logger.info('Choosing a verse step');
             await this.smartWait.waitForNetworkIdle();
-            await this.validateElementVisibility('#versePane h1', 'Choose verse');
+            await this.validateElementVisibility(`${Selectors.MANAGE_QUESTIONS.CHOOSE_VERSE_HEADER}`, 'Choose verse');
             await this.interactWithRole('button', verseNumber.toString(), 'click');
         });
     }
@@ -47,7 +48,7 @@ export class ManageQuestionsPage extends PlaywrightWrapper {
         await test.step('Choose a chapter', async () => {
             this.logger.info('Choosing a chapter step');
             await this.smartWait.waitForNetworkIdle();
-            await this.validateElementVisibility('#chapterPane h1', 'Choose chapter');
+            await this.validateElementVisibility(`${Selectors.MANAGE_QUESTIONS.CHOOSE_CHAPTER_HEADER}`, 'Choose chapter');
             await this.interactWithRole('button', chapterNumber.toString(), 'click');
             await this.chooseVerse(chapterVerse);
         });
@@ -57,7 +58,7 @@ export class ManageQuestionsPage extends PlaywrightWrapper {
         await test.step('Choose a book', async () => {
             this.logger.info('Choosing a book step');
             await this.smartWait.waitForNetworkIdle();
-            await this.validateElementVisibility('#bookPane h1', 'Choose book');
+            await this.validateElementVisibility(`${Selectors.MANAGE_QUESTIONS.CHOOSE_BOOK_HEADER}`, 'Choose book');
             await this.interactWithRole('button', bookName, 'click');
             await this.chooseChapter(chapterNumber, chapterVerse);
         });
@@ -67,7 +68,7 @@ export class ManageQuestionsPage extends PlaywrightWrapper {
             await test.step('select a start reference', async () => {
             this.logger.info('Selecting a start reference step');
             await this.smartWait.waitForNetworkIdle();
-            await this.getById('scripture-start').locator('.mat-mdc-form-field-icon-suffix button').click();
+            await this.getById(`${Selectors.MANAGE_QUESTIONS.START_REFERENCE}`).locator(`${Selectors.MANAGE_QUESTIONS.START_REFERENCE_DOWN_ARROW}`).click();
             await this.chooseBook(bookName, chapterNumber, chapterVerse);            
         });
     }
@@ -76,7 +77,7 @@ export class ManageQuestionsPage extends PlaywrightWrapper {
         await test.step('select an end reference', async () => {
             this.logger.info('Selecting an end reference step');
             await this.smartWait.waitForNetworkIdle();
-            await this.validateElementVisibility('#rangeEndPane div', 'Choose end verse');
+            await this.validateElementVisibility(`${Selectors.MANAGE_QUESTIONS.CHOOSE_END_VERSE_HEADER}`, 'Choose end verse');
             await this.interactWithRole('button', chapterNumber.toString(), 'click');
         });
     }
@@ -85,7 +86,7 @@ export class ManageQuestionsPage extends PlaywrightWrapper {
         await test.step('select an end reference', async () => {
             this.logger.info('Selecting an end reference step');
             await this.smartWait.waitForNetworkIdle();
-            await this.getById('scripture-end').locator('.mat-mdc-form-field-icon-suffix button').click();
+            await this.getById(`${Selectors.MANAGE_QUESTIONS.END_REFERENCE}`).locator(`${Selectors.MANAGE_QUESTIONS.END_REFERENCE_DOWN_ARROW}`).click();
             await this.chooseEndReference(chapterNumber);            
         });
     }
@@ -94,7 +95,7 @@ export class ManageQuestionsPage extends PlaywrightWrapper {
         await test.step('Enter question content', async () => {
             this.logger.info('Entering question content step');
             await this.smartWait.waitForNetworkIdle();
-            await this.getById('textarea').fill(questionText);
+            await this.getById(`${Selectors.MANAGE_QUESTIONS.QUESTION_TEXTAREA}`).fill(questionText);
         });
     }
 
@@ -102,7 +103,7 @@ export class ManageQuestionsPage extends PlaywrightWrapper {
         await test.step('Save answer', async () => {
             this.logger.info('Saving answer step');
             await this.smartWait.waitForNetworkIdle();
-            await this.getById('question-save-btn').click();
+            await this.getById(`${Selectors.MANAGE_QUESTIONS.QUESTION_SAVE_ANSWER_BUTTON}`).click();
         });
     }
 
@@ -110,7 +111,7 @@ export class ManageQuestionsPage extends PlaywrightWrapper {
         return await test.step('Create a question', async () => {
             this.logger.info('Creating a question step');
             await this.smartWait.waitForNetworkIdle();
-            await this.addQuestion();
+            await this.openAddQuestion();
             await this.scriptureStartReference(bookName, chapterNumber, chapterVerse);
             await this.questionContent(questionText);
             await this.saveAnswer();
@@ -130,11 +131,11 @@ export class ManageQuestionsPage extends PlaywrightWrapper {
         await test.step('Expand question pane', async () => {
             this.logger.info('Expanding question pane step');
             await this.smartWait.waitForNetworkIdle();
-            const questionPane = await this.page.locator('#text-with-questions-list .mat-expansion-indicator svg').all();
+            const questionPane = await this.page.locator(`${Selectors.MANAGE_QUESTIONS.QUESTION_BOOK_ROW}`).all();
             for (const question of questionPane) {
                 await question.click();
             }
-            const questionPaneWrapper = await this.page.locator('#text-with-questions-list .mat-expansion-panel-content-wrapper .mat-expansion-indicator svg').all();
+            const questionPaneWrapper = await this.page.locator(`${Selectors.MANAGE_QUESTIONS.QUESTION_CHAPTER_ROW}`).all();
             for (const question of questionPaneWrapper) {
                 await question.click();
             }
@@ -145,7 +146,7 @@ export class ManageQuestionsPage extends PlaywrightWrapper {
         return await test.step('Find question content', async () => {
             this.logger.info('Finding question content step');
             await this.smartWait.waitForNetworkIdle();
-            const questionElements = await this.getByClass('#text-with-questions-list span.overflow-ellipsis').all();
+            const questionElements = await this.getByClass(`${Selectors.MANAGE_QUESTIONS.QUESTION_CONTENT_ROW}`).all();
             for (const question of questionElements) {
                 const content = await question.textContent();
                 if (content?.includes(questionText)) {
@@ -155,9 +156,8 @@ export class ManageQuestionsPage extends PlaywrightWrapper {
             // Return an empty string if the question content is not found
             return '';
         });
-    }
-
-    
+    }   
 
 }
+
 
