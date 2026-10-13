@@ -26,9 +26,9 @@ test('translator can open edit and review page',
     expect(await translatorRolePages.editReview.configureTranslatorSettings()).toBeVisible();
   });
 
-/*   await allure.step('Open questions and answers page as CC checker', async () => {
+  await allure.step('Open questions and answers page as CC checker', async () => {
     await ccCheckerRolePages.questionsAndAnswers.openProject(Inputs.PROJECT_NAME.F03);
     await ccCheckerRolePages.questionsAndAnswers.navigateToQuestionsAnswers();
     await expect(ccCheckerRolePages.questionsAndAnswers.page).toHaveURL(new RegExp(`[?&]${Asserts.CHECKING.CHAPTER}`));
-  });  */// End of allure step for CC checker
+  });  // End of allure step for CC checker
 }); 

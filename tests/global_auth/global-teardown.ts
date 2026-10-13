@@ -32,7 +32,6 @@ async function globalTeardown(): Promise<void> {
     log.info('Removed session', { file });
   }
   // End of session removal loop 
- 
   log.info('Auth teardown complete');
   await appendFrameworkLogToSpecLogs(log, startOffset);
 }

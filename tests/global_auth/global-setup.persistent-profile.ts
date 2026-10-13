@@ -125,8 +125,6 @@ async function performLogin(user: UserConfig): Promise<void> {
     args:       ['--no-sandbox'],
     viewport:   { width: 1280, height: 720 },
     acceptDownloads: true,
-    // Record here; failure-only retention must be handled by deleting successful-run videos.
-    recordVideo: { dir: 'test-results/videos' },
     userAgent:  FIXED_USER_AGENT,
     locale:     'en-IN',
     timezoneId: 'Asia/Kolkata',

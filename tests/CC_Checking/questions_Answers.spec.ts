@@ -15,6 +15,7 @@ test('CC Checker can open Questions & Answers page', async ({
 }) => {
   await ccCheckerRolePages.questionsAndAnswers.openProject(Inputs.PROJECT_NAME.F03);
   await ccCheckerRolePages.questionsAndAnswers.navigateToQuestionsAnswers();
-  await expect(ccCheckerRolePages.questionsAndAnswers.page).not.toHaveURL(new RegExp(`[?&]${Asserts.CHECKING.CHAPTER}`));
+  await expect(ccCheckerRolePages.questionsAndAnswers.page).toHaveURL(new RegExp(`[?&]${Asserts.CHECKING.CHAPTER}`));
+
 });
 
