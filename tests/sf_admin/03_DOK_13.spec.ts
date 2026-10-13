@@ -2,16 +2,21 @@ import { test, expect } from '../../src/fixtures/auth.fixtures';
 import { Asserts } from '../../src/test_data/constants/asserts';
 import { Inputs } from '../../src/test_data/constants/inputs';
 
-test.beforeEach('DOK-06: SF admin setup for connecting a project', async ({ adminRolePages }) => {
+test.beforeEach('DOK-13: SF admin setup for connecting a project', async ({ adminRolePages }) => {
     await adminRolePages.myProjects.adminConnectProjects(Inputs.PROJECT_NAME.TNN01); 
 });
 
-test.afterEach('DOK-06: SF admin teardown for deleting a project', async ({ adminRolePages }) => {
+test.afterEach('DOK-13: SF admin teardown for deleting a project', async ({ adminRolePages }) => {
     await adminRolePages.myProjects.adminNavigateSettings(Inputs.PROJECT_NAME.TNN01);
     await adminRolePages.settings.deleteProject(Inputs.PROJECT_NAME.TNN01);
 });
 
-test('DOK-06: Synchronization stalls on retry if connection lost during previous send/receive -SF-1367', async ({
+test('DOK-13: SF-1607 Offline edits are duplicated when returning online', 
+    { 
+        tag: ['@smoke'],
+        annotation: { type: 'Issue', description: 'https://jira.example.com/SF-1607' },
+    },
+    async ({
   adminRolePages
 }) => {
     await adminRolePages.myProjects.openProjects();

@@ -23,7 +23,12 @@ const reporters: ReporterDescription[] = [
   ['allure-playwright', {
     resultsDir: 'reports/allure-results',
     detail: true,
-    suiteTitle: true
+    suiteTitle: true,
+    enableScreenshotDiff: true,
+    enableVideo: true,
+    enableConsoleLog: true,
+    enableAllLog: true,
+
   }],
 ];
 
@@ -57,7 +62,7 @@ const browser_role_projects = browsers.flatMap(({ name: browserName, device }) =
 export default defineConfig({
   testDir: './tests',
 
-  globalSetup:    require.resolve('./tests/global_auth/global-setup.persistent-profile'),
+  globalSetup:    require.resolve('./tests/global_auth/global-setup'),
   globalTeardown: require.resolve('./tests/global_auth/global-teardown'),
 
   fullyParallel: true,
@@ -75,7 +80,7 @@ export default defineConfig({
     headless:          !!process.env.CI || true,
     trace:             'retain-on-failure',
     screenshot:        'only-on-failure',
-    video:             'retain-on-failure',
+    video:             { mode: 'retain-on-failure', size: { width: 1280, height: 720 } },
     serviceWorkers: 'block',
     actionTimeout:     60_000,
     navigationTimeout: 120_000,

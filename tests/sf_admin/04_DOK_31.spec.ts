@@ -3,16 +3,21 @@ import { Asserts } from '../../src/test_data/constants/asserts';
 import { Inputs } from '../../src/test_data/constants/inputs';
 
 
-test.beforeEach('DOK-06: SF admin setup for connecting a project', async ({ adminRolePages }) => {
+test.beforeEach('DOK-31: SF admin setup for connecting a project', async ({ adminRolePages }) => {
     await adminRolePages.myProjects.adminConnectProjects(Inputs.PROJECT_NAME.TNN01); 
 });
 
-test.afterEach('DOK-06: SF admin teardown for deleting a project', async ({ adminRolePages }) => {
+test.afterEach('DOK-31: SF admin teardown for deleting a project', async ({ adminRolePages }) => {
     await adminRolePages.myProjects.adminNavigateSettings(Inputs.PROJECT_NAME.TNN01);
     await adminRolePages.settings.deleteProject(Inputs.PROJECT_NAME.TNN01);
 });
 
-test('DOK-06: Synchronization stalls on retry if connection lost during previous send/receive -SF-1367', async ({
+test('DOK-31: Synchronization stalls on retry if connection lost during previous send/receive -SF-1367', 
+    { 
+        tag: ['@regression', '@smoke'],
+        annotation: { type: 'Issue', description: 'https://jira.example.com/SF-1367' },
+    },
+    async ({
   adminRolePages
 }) => {
     await adminRolePages.myProjects.openProjects();

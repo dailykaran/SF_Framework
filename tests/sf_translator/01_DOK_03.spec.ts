@@ -11,7 +11,12 @@ test.afterEach('DOK-03: SF admin teardown for deleting a project', async ({ admi
     await adminRolePages.settings.deleteProject(Inputs.PROJECT_NAME.TNN01);
 });
 
-test('DOK-03: Add cancel for sync', async ({
+test('DOK-03: Add cancel for sync', 
+    { 
+      tag: ['@regression', '@smoke'],
+      annotation: { type: 'Non-Issue', description: 'Added as a test for canceling sync scenario' },
+    },
+  async ({
   translatorRolePages
 }) => {
   await translatorRolePages.myProjects.joinProject(Inputs.PROJECT_NAME.TNN01);
