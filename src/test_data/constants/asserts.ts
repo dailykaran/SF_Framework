@@ -33,6 +33,15 @@ export const Asserts = {
     NAVIGATION_URL: 'checking',
     CHAPTER: 'scope=chapter', 
   },
+
+  //
+  QUESTIONS_AND_ANSWERS: {
+    QUESTION_ICON_COLOR: 'rgb(255, 247, 255)',
+    QUESTION_HIGHLIGHT_COLOR_ATTRIBUTE: 'data-segment',
+    CHAPTER1_VERSE_ONE: 'verse_1_1',
+    CHAPTER2_VERSE_ONE: 'verse_2_1',
+    QUESTION_COUNT: 'data-question-count',
+  },
   // Overview page
   OVERVIEW: {
 

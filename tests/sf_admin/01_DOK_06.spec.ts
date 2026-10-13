@@ -11,7 +11,12 @@ test.afterEach('DOK-06: SF admin teardown for deleting a project', async ({ admi
     await adminRolePages.settings.deleteProject(Inputs.PROJECT_NAME.TNN01);
 });
 
-test('DOK-06: Synchronization stalls on retry if connection lost during previous send/receive -SF-1367', async ({
+test('DOK-06: Synchronization stalls on retry if connection lost during previous send/receive -SF-1367', 
+    { 
+        tag: ['@smoke'],
+        annotation: { type: 'Issue', description: 'https://jira.example.com/SF-1367' },
+    },
+    async ({ 
   adminRolePages
 }) => {
     await adminRolePages.editReview.navigateToEditReview();
@@ -20,8 +25,11 @@ test('DOK-06: Synchronization stalls on retry if connection lost during previous
     const [book, chapter, verse] = reference.split(',');
   
     await adminRolePages.editReview.selectBook(book);
-    const editor = await adminRolePages.editReview.enterTextInEditorForMultipleVerses(chapter, verse);
-    expect(editor).not.toBeEmpty();
+    await adminRolePages.editReview.selectChapter(chapter);
+    await adminRolePages.editReview.wait('mediumWait');
+    const verseData = await adminRolePages.editReview.enterTextInEditorForMultipleVerses(verse);
+    await adminRolePages.editReview.page.reload({ waitUntil: 'networkidle' });
+    await expect(verseData.verseLocator).toEqual(verseData.inputVerseText);
 
     await adminRolePages.synchronization.wait('minWait');
     await adminRolePages.synchronization.navigateToSyncWithParatext();

@@ -13,8 +13,9 @@ test.afterEach(async ({ ccCheckerRole }) => {
 test('CC Checker can open Questions & Answers page', async ({
   ccCheckerRolePages
 }) => {
-  await ccCheckerRolePages.communityChecker.openProject(Inputs.PROJECT_NAME.F03);
-  await ccCheckerRolePages.communityChecker.navigateToQuestionsAnswers();
-  await expect(ccCheckerRolePages.communityChecker.page).toHaveURL(new RegExp(`[?&]${Asserts.CHECKING.CHAPTER}`));
+  await ccCheckerRolePages.questionsAndAnswers.openProject(Inputs.PROJECT_NAME.F03);
+  await ccCheckerRolePages.questionsAndAnswers.navigateToQuestionsAnswers();
+  await expect(ccCheckerRolePages.questionsAndAnswers.page).toHaveURL(new RegExp(`[?&]${Asserts.CHECKING.CHAPTER}`));
+
 });
 

@@ -1,4 +1,5 @@
-import { test as base, expect, type Page } from '@playwright/test';
+import { test as base, expect, type Page, type TestInfo } from '@playwright/test';
+import { mergeVideos, type RecordedVideo } from '../utils/video/mergeVideos';
 import * as path from 'path';
 import * as fs from 'fs';
 import { createLogger, getSpecLogFilePath, releaseLogger, serializeError, writeLog } from '../utils/logger/logger';
@@ -22,6 +23,7 @@ const log = createLogger('auth.fixtures');
 
 type AuthFixtures = {
   logger: winston.Logger;
+  videoTracker: VideoTracker;
   adminRole:    Page;
   translatorRole:   Page;
   reviewerRole: Page;
@@ -49,16 +51,85 @@ const AUTH = {
   ccChecker: requireEnv('CC_CHECKER'),
 } as const;
 
-/** Creates a new browser context pre-loaded with the given storageState. */
+type VideoMode = 'off' | 'on' | 'retain-on-failure' | 'on-first-retry';
+
+/** Collects the per-role recordings of one test so they can be merged into a single file per spec. */
+interface VideoTracker {
+  record: boolean;
+  dir: string;
+  size?: { width: number; height: number };
+  clips: { role: string; page: Page; startedAt: number }[];
+}
+
+function resolveVideoMode(option: unknown): VideoMode {
+  if (typeof option === 'string') return option as VideoMode;
+  if (option && typeof option === 'object' && 'mode' in option) return (option as { mode: VideoMode }).mode;
+  return 'off';
+}
+
+function shouldRecordVideo(mode: VideoMode, testInfo: TestInfo): boolean {
+  return mode === 'on' || mode === 'retain-on-failure' || (mode === 'on-first-retry' && testInfo.retry === 1);
+}
+
+const slug = (text: string): string => text.replace(/[^a-zA-Z0-9]+/g, '-').replace(/^-|-$/g, '').slice(0, 60);
+
+/**
+ * Creates a new browser context pre-loaded with the given storageState.
+ * Contexts from browser.newContext() don't inherit the config `use.video`, so it is applied here.
+ */
 async function makeAuthPage(
   browser: import('@playwright/test').Browser,
   storageStatePath: string,
+  tracker: VideoTracker,
+  role: string,
 ): Promise<Page> {
-  const context = await browser.newContext({ 
+  const viewport = { width: 1440, height: 900 };
+  const context = await browser.newContext({
     storageState: storageStatePath,
-    viewport: { width: 1440, height: 900}
+    viewport,
+    ...(tracker.record && { recordVideo: { dir: path.join(tracker.dir, role), size: tracker.size ?? viewport } }),
   });
-  return context.newPage();
+  const page = await context.newPage();
+  if (tracker.record) tracker.clips.push({ role, page, startedAt: Date.now() });
+  return page;
+}
+
+/**
+ * Runs after all role contexts are closed: produces ONE video per test (spec),
+ * merging the roles side by side when more than one role was used, and keeps it per `use.video`.
+ */
+async function finalizeVideos(tracker: VideoTracker, testInfo: TestInfo, mode: VideoMode): Promise<void> {
+  if (!tracker.clips.length) return;
+
+  const failed = testInfo.status !== testInfo.expectedStatus;
+  const keep = mode === 'on' || mode === 'on-first-retry' || failed;
+
+  const clips: RecordedVideo[] = [];
+  for (const { role, page, startedAt } of tracker.clips) {
+    const file = await page.video()?.path().catch(() => undefined);
+    if (file && fs.existsSync(file)) clips.push({ role, file, startedAt });
+  }
+
+  if (keep && clips.length) {
+    const specName = path.basename(testInfo.file).replace(/\.(spec|test)\.[jt]s$/, '');
+    const output = testInfo.outputPath(`${specName}-${slug(testInfo.title)}.webm`);
+    let attached = false;
+    if (clips.length === 1) {
+      fs.copyFileSync(clips[0].file, output);
+      attached = true;
+    } else {
+      attached = mergeVideos(clips, output);
+    }
+    if (attached) {
+      await testInfo.attach('video', { path: output, contentType: 'video/webm' });
+    } else {
+      for (const clip of clips) {
+        await testInfo.attach(`video-${clip.role}`, { path: clip.file, contentType: 'video/webm' });
+      }
+      return; // keep the raw clips since they were attached
+    }
+  }
+  fs.rmSync(tracker.dir, { recursive: true, force: true });
 }
 
 function addPageDiagnostics(page: Page, log: winston.Logger, role: string): void {
@@ -124,33 +195,46 @@ export const test = base.extend<AuthFixtures>({
       }
   }, { auto: true }],
 
-  adminRole: async ({ browser, logger }, use) => {
+  videoTracker: async ({}, use, testInfo) => {
+    const videoOption = testInfo.project.use.video;
+    const mode = resolveVideoMode(videoOption);
+    const tracker: VideoTracker = {
+      record: shouldRecordVideo(mode, testInfo),
+      dir: testInfo.outputPath('role-videos'),
+      size: typeof videoOption === 'object' ? videoOption?.size : undefined,
+      clips: [],
+    };
+    await use(tracker);
+    await finalizeVideos(tracker, testInfo, mode);
+  },
+
+  adminRole: async ({ browser, logger, videoTracker }, use) => {
     checkAuthentication(AUTH.admin);
-    const page = await makeAuthPage(browser, AUTH.admin);
+    const page = await makeAuthPage(browser, AUTH.admin, videoTracker, 'admin');
     addPageDiagnostics(page, logger, 'admin');
     await use(page);
     await page.context().close();
   },
 
-  translatorRole: async ({ browser, logger }, use) => {
+  translatorRole: async ({ browser, logger, videoTracker }, use) => {
     checkAuthentication(AUTH.translator);
-    const page = await makeAuthPage(browser, AUTH.translator);
+    const page = await makeAuthPage(browser, AUTH.translator, videoTracker, 'translator');
     addPageDiagnostics(page, logger, 'translator');
     await use(page);
     await page.context().close();
   },
 
-  reviewerRole: async ({ browser, logger }, use) => {
+  reviewerRole: async ({ browser, logger, videoTracker }, use) => {
     checkAuthentication(AUTH.reviewer);
-    const page = await makeAuthPage(browser, AUTH.reviewer);
+    const page = await makeAuthPage(browser, AUTH.reviewer, videoTracker, 'reviewer');
     addPageDiagnostics(page, logger, 'reviewer');
     await use(page);
     await page.context().close();
   },
 
-  ccCheckerRole: async ({ browser, logger }, use) => {
+  ccCheckerRole: async ({ browser, logger, videoTracker }, use) => {
     checkAuthentication(AUTH.ccChecker);
-    const page = await makeAuthPage(browser, AUTH.ccChecker);
+    const page = await makeAuthPage(browser, AUTH.ccChecker, videoTracker, 'cc-checker');
     addPageDiagnostics(page, logger, 'cc-checker');
     await use(page);
     await page.context().close();

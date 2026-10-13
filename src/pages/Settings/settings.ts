@@ -22,8 +22,8 @@ export class SettingsPage extends PlaywrightWrapper {
     await test.step(`delete a project: ${projectName}`, async () => {
       this.logger.info('delete a project', { projectName });
       await this.smartWait.waitForNetworkIdle();
-      await this.page.locator(Selectors.SETTINGS.DANGER_ZONE).focus();
-      await this.page.locator(Selectors.SETTINGS.DANGER_ZONE).scrollIntoViewIfNeeded();
+      await this.getByClass(Selectors.SETTINGS.DANGER_ZONE).focus();
+      await this.getByClass(Selectors.SETTINGS.DANGER_ZONE).scrollIntoViewIfNeeded();
       await this.getById(`${Selectors.SETTINGS.DELETE_THIS_PROJECT_BUTTON}`).click();
       await this.validateElementVisibility(Selectors.SETTINGS.DELETE_DIALOG, 'visible');
       await this.interactWithElement('LABEL', Inputs.LABELS.PROJECT_NAME, 'fill', this.extractAfterHyphen(projectName));

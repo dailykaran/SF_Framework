@@ -33,7 +33,7 @@ export class MyProjectsPage extends PlaywrightWrapper {
   async locateProjectByFilter(projectName: string, locator: string, buttonName: string): Promise<void> {
     await test.step(`locate Project By Filter: ${projectName}`, async () => {
       this.logger.info('locate Project By Filter', { projectName, locator, buttonName });
-      const projectLocator = this.page.locator(locator)
+      const projectLocator = this.getByClass(locator)
                                  .filter({ hasText: projectName });
       const linkOrButton = projectLocator.getByRole('link', { name: buttonName })
                                           .or(projectLocator.getByRole('button', { name: buttonName }));

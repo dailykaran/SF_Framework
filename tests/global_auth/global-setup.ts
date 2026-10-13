@@ -198,7 +198,9 @@ async function performLogin(
     );
   }
 
-  const context = await browser.newContext({viewport: { width: 1440, height: 900 },});
+  const context = await browser.newContext({
+    viewport: { width: 1440, height: 900 },
+  });
   const page    = await context.newPage();
   const loginUsers = new LoginUsers(page, baseurl);
 
