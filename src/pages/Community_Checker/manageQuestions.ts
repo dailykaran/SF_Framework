@@ -102,7 +102,8 @@ export class ManageQuestionsPage extends PlaywrightWrapper {
     async saveAnswer(): Promise<void> {
         await test.step('Save answer', async () => {
             this.logger.info('Saving answer step');
-            await this.smartWait.waitForNetworkIdle();
+            await this.smartWait.waitForVisible(`#${Selectors.MANAGE_QUESTIONS.QUESTION_SAVE_ANSWER_BUTTON}`);           
+            await this.waitSelector(`#${Selectors.MANAGE_QUESTIONS.QUESTION_SAVE_ANSWER_BUTTON}`);
             await this.getById(`${Selectors.MANAGE_QUESTIONS.QUESTION_SAVE_ANSWER_BUTTON}`).click();
         });
     }
@@ -115,6 +116,7 @@ export class ManageQuestionsPage extends PlaywrightWrapper {
             await this.scriptureStartReference(bookName, chapterNumber, chapterVerse);
             await this.questionContent(questionText);
             await this.saveAnswer();
+            await this.smartWait.waitForNetworkIdle();
             return questionText;
         });
     }
@@ -130,12 +132,14 @@ export class ManageQuestionsPage extends PlaywrightWrapper {
     async expandQuestionPane(): Promise<void> {
         await test.step('Expand question pane', async () => {
             this.logger.info('Expanding question pane step');
+            await this.validateElementVisibility(`${Selectors.MANAGE_QUESTIONS.QUESTION_BOOK_ROW}`, 'Question book row should be visible');
             await this.smartWait.waitForNetworkIdle();
-            const questionPane = await this.page.locator(`${Selectors.MANAGE_QUESTIONS.QUESTION_BOOK_ROW}`).all();
+            const questionPane = await this.getByClass(`${Selectors.MANAGE_QUESTIONS.QUESTION_BOOK_ROW}`).all();
             for (const question of questionPane) {
                 await question.click();
             }
-            const questionPaneWrapper = await this.page.locator(`${Selectors.MANAGE_QUESTIONS.QUESTION_CHAPTER_ROW}`).all();
+            await this.validateElementVisibility(`${Selectors.MANAGE_QUESTIONS.QUESTION_CHAPTER_ROW}`, 'Question chapter row should be visible');
+            const questionPaneWrapper = await this.getByClass(`${Selectors.MANAGE_QUESTIONS.QUESTION_CHAPTER_ROW}`).all();
             for (const question of questionPaneWrapper) {
                 await question.click();
             }

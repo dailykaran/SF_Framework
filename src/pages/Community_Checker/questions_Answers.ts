@@ -54,7 +54,7 @@ export class QuestionsAndAnswersPage extends PlaywrightWrapper {
     async getQuestionIconColor(): Promise<string> {
       return await test.step(`Get icon for question: `, async () => {
         this.logger.info('Getting question icon step', );
-        const questionElement = await this.page.locator(`${Selectors.QUESTIONS_AND_ANSWERS.QUESTION_HIGHLIGHT}`).filter({ visible: true });
+        const questionElement = await this.getByClass(`${Selectors.QUESTIONS_AND_ANSWERS.QUESTION_HIGHLIGHT}`).filter({ visible: true });
         const questionIconColor = await questionElement.evaluate((el) =>
                         el.ownerDocument.defaultView?.getComputedStyle(el, '::before').color ?? ''
                       );
@@ -66,8 +66,7 @@ export class QuestionsAndAnswersPage extends PlaywrightWrapper {
     async getQuestionIcon(): Promise<boolean> {
       return await test.step(`Get icon for question: `, async () => {
         this.logger.info('Getting question icon step', );
-        const iconRendered = await this.page
-          .locator(`${Selectors.QUESTIONS_AND_ANSWERS.QUESTION_HIGHLIGHT}`)
+        const iconRendered = await this.getByClass(`${Selectors.QUESTIONS_AND_ANSWERS.QUESTION_HIGHLIGHT}`)
           .filter({ visible: true })
           .evaluate((el) => {
             const style = el.ownerDocument.defaultView?.getComputedStyle(el, '::before');

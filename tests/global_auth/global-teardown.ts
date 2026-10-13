@@ -30,8 +30,8 @@ async function globalTeardown(): Promise<void> {
   for (const file of files) {
     fs.rmSync(path.join(AUTH_DIR, file), { force: true });
     log.info('Removed session', { file });
-  }
-  // End of session removal loop 
+  } 
+  // End of session removal loop
   log.info('Auth teardown complete');
   await appendFrameworkLogToSpecLogs(log, startOffset);
 }

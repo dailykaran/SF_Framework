@@ -84,9 +84,9 @@ export default defineConfig({
     serviceWorkers: 'block',
     actionTimeout:     60_000,
     navigationTimeout: 120_000,
-    launchOptions: {
-      slowMo: 150, // 150ms delay between every operation
-    }, 
+/*     launchOptions: {
+      slowMo: 100, // 100ms delay between every operation
+    },  */
   },
 
   projects: 
