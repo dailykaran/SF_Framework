@@ -16,7 +16,9 @@ export const Selectors = {
     CHAPTER_SELECT: '#chapter-select',
     CHAPTER_LIST_BOX: 'mat-option',
     CHAPTER_LIST_BOX_TEXT: 'span.mdc-list-item__primary-text',
-    VERSE_SELECT: 'usx-para-contents usx-segment',
+    VERSE_SELECT: '#target-text-area usx-para-contents usx-segment',
+    // VERSE_EDITABLE: '#target-text-area usx-para-contents usx-segment',
+    VERSE_NOT_EDITABLE: '#target-text-area div.ql-editor',
   },
 
   // Synchronization page
@@ -69,6 +71,11 @@ export const Selectors = {
     QUESTION_HIGHLIGHT: 'usx-segment.question-segment.highlight-segment',
     
   },
+
+  // Banner messages
+  BANNER: {
+    NO_CHAPTER_PERMISSION_MESSAGE: '#target-text-area .notice-content',
+  }
 
 
 } as const;

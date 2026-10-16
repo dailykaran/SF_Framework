@@ -22,5 +22,15 @@ export class SF_Components extends PlaywrightWrapper {
             const snackBarMessage = await this.getByClass(`${Selectors.SYNCHRONIZATION.SNACK_BAR_MESSAGE}`).textContent();
             return snackBarMessage ?? '';
         });
-    }  
+    }
+    
+    async getNoChapterPermission(): Promise<string> {
+        return await test.step('Get No Chapter Permission message', async () => {
+            this.logger.info('Getting No Chapter Permission message step');
+            await this.smartWait.waitForNetworkIdle();
+            await this.waitSelector(`${Selectors.BANNER.NO_CHAPTER_PERMISSION_MESSAGE}`);
+            const noChapterPermissionMessage = await this.getByClass(`${Selectors.BANNER.NO_CHAPTER_PERMISSION_MESSAGE}`).textContent();
+            return noChapterPermissionMessage ?? '';
+        });
+    }
 }

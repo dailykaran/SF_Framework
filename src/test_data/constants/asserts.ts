@@ -45,5 +45,11 @@ export const Asserts = {
   // Overview page
   OVERVIEW: {
 
-  }
+  },
+
+  // Banner messages
+  BANNER: {
+    NO_CHAPTER_PERMISSION_MESSAGE: " You don't have permission to edit this chapter, even though you have the Administrator role. Permissions can only be changed in Paratext. ",
+  },
+
 } as const;
