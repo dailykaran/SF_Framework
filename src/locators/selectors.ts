@@ -63,6 +63,10 @@ export const Selectors = {
     QUESTION_BOOK_ROW: '#text-with-questions-list .mat-expansion-indicator svg',
     QUESTION_CHAPTER_ROW: '#text-with-questions-list .mat-expansion-panel-content-wrapper .mat-expansion-indicator svg',
     QUESTION_CONTENT_ROW: '#text-with-questions-list span.overflow-ellipsis',
+
+    NEW_QUESTION_HEADER: '.dialog-container h1',
+    QUESTION_QUILL_EDITOR: '.ql-editor usx-segment',
+    QUESTION_QUILL_EDITOR_VERSE_HIGHLIGHT: 'highlight-segment',
   },
 
   // Questions and Answers page

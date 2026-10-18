@@ -25,6 +25,7 @@ export const Inputs = {
     LUKE: 'Luke',
     MARK: 'Mark',
     GENESIS: 'Genesis',
+    MATTHEW: 'Matthew',
   },
   
   // Synchronization page

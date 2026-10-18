@@ -41,6 +41,7 @@ export const Asserts = {
     CHAPTER1_VERSE_ONE: 'verse_1_1',
     CHAPTER2_VERSE_ONE: 'verse_2_1',
     QUESTION_COUNT: 'data-question-count',
+    NEW_QUESTION_HEADER: 'New Question',
   },
   // Overview page
   OVERVIEW: {
@@ -50,6 +51,11 @@ export const Asserts = {
   // Banner messages
   BANNER: {
     NO_CHAPTER_PERMISSION_MESSAGE: " You don't have permission to edit this chapter, even though you have the Administrator role. Permissions can only be changed in Paratext. ",
+  },
+
+  //Manage Questions
+  MANAGE_QUESTIONS: {
+    QUESTION_QUILL_EDITOR_VERSE_DATA_SEGMENT: 'data-segment',
   },
 
 } as const;

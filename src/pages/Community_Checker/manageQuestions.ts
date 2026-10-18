@@ -34,6 +34,14 @@ export class ManageQuestionsPage extends PlaywrightWrapper {
         });
     }
 
+    async closeNewQuestionDialog(): Promise<void> {
+        await test.step('Close the new question dialog', async () => {
+            this.logger.info('Closing the new question dialog step');
+            await this.interactWithElement('TEXT', 'Cancel', 'click');
+            await this.smartWait.waitForNetworkIdle();
+        });
+    }
+
 
     async chooseVerse(verseNumber: number): Promise<void> {
         await test.step('Choose a verse', async () => {
@@ -162,6 +170,30 @@ export class ManageQuestionsPage extends PlaywrightWrapper {
         });
     }   
 
-}
+    async findQuestionQuillEditorContent(chapter: number, verse: number): Promise<Locator> {
+        return await test.step('Find question quill editor content', async () => {
+            this.logger.info('Finding question quill editor content step');
+            await this.smartWait.waitForNetworkIdle();
+            const editorElements = await this.getByClass(`${Selectors.MANAGE_QUESTIONS.QUESTION_QUILL_EDITOR}`).filter({ has: this.page.locator(`[data-segment="verse_${chapter}_${verse}"]`) })
+            return editorElements;
+        });
+    }
 
+    async findQuestionHighlightContent(): Promise<Locator> {
+        return await test.step('Find question highlight content', async () => {
+            this.logger.info('Finding question highlight content step');
+            await this.smartWait.waitForNetworkIdle();
+            const highlightElements = await this.getByClass(`${Selectors.MANAGE_QUESTIONS.QUESTION_QUILL_EDITOR}`).all();
+            console.log(`Found ${highlightElements.length} highlight elements`);
+            for (const highlight of highlightElements) {
+                const verseHighlight = this.page.locator(`.${Selectors.MANAGE_QUESTIONS.QUESTION_QUILL_EDITOR_VERSE_HIGHLIGHT}`);
+                console.log(`Found highlight element: ${await verseHighlight.count()}`);
+                if (await verseHighlight.isVisible() && await highlight.isVisible()) {
+                    return verseHighlight;
+                }
+            }
+            return this.page.locator(':not(*)');
+        });
+    }
+}
 
