@@ -165,4 +165,11 @@ export class EditReviewPage extends PlaywrightWrapper {
       return `${data.book}, ${data.chapter}, ${data.verse}`;
     });
   }
+
+  async getVerseEditableLocator(): Promise<void> {
+    return await test.step('Get locator for verse editable', async () => {
+      this.logger.info('Getting locator for verse editable step');
+      return await this.getByClass(Selectors.EDIT_REVIEW.VERSE_SELECT).first().click({ trial: true, timeout: 1000 });
+    });
+  }
 }

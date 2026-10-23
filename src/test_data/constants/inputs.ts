@@ -3,8 +3,8 @@ export const Inputs = {
   // Projects name
   PROJECT_NAME: {
     F03: '- 03F',
-    TNN01: '- TransDaugtherProject'
-    //TNN01: '- TestSF01 '
+    TNN01: '- TransDaugtherProject',
+    DSS: '- TransDaugtherProject'
   },
 
   // Global layout
@@ -22,8 +22,10 @@ export const Inputs = {
 
   //books
   BOOKS: {
-    GENESIS: 'Genesis',
+    LUKE: 'Luke',
     MARK: 'Mark',
+    GENESIS: 'Genesis',
+    MATTHEW: 'Matthew',
   },
   
   // Synchronization page
