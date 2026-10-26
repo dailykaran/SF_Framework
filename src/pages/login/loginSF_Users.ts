@@ -1,4 +1,5 @@
 import { Page, expect } from '@playwright/test';
+import { generateSync } from 'otplib';
 import process from 'process';
 import { createLogger } from '../../utils/logger/logger';
 
@@ -68,7 +69,33 @@ export class LoginUsers {
         const nextPasswordButton = this.page.getByRole('button', { name: 'Next' });
         await nextPasswordButton.click();
 
+        // Wait for the Google 2FA challenge page (dp / selection / totp)
+        await this.page.waitForURL(/accounts\.google\.com\/v3\/signin\/challenge\/(dp|selection|totp)/, { timeout: this.URLTimeout });
+        if (/\/challenge\/(dp|totp|selection)/.test(this.page.url())){
+            const totpSecret = process.env.GOOGLE_TOTP_SECRET;
+            if (!totpSecret) {
+                throw new Error('GOOGLE_TOTP_SECRET is not set; cannot complete Google 2FA');
+            }
+            // Google may default to "Tap Yes on your phone"; switch to the authenticator option
+            const tryAnother = this.page.getByRole('button', { name: 'Try another way' });
+            if (await tryAnother.isVisible({ timeout: 3000 }).catch(() => false)) {
+                await tryAnother.click();
+                await this.page.getByText('Get a verification code from the Google Authenticator app').click();
+            }
+            // Avoid generating a code in the last seconds of its 30s window
+            const remaining = 30 - (Math.floor(Date.now() / 1000) % 30);
+            if (remaining < 4) await this.page.waitForTimeout((remaining + 1) * 1000);
+
+            const code = generateSync({ secret: totpSecret.replace(/\s+/g, '') });
+            await this.page.getByLabel('Enter code').fill(code);
+            await this.page.getByRole('button', { name: 'Next' }).click();
+        }
+        else {
+            throw new Error('TOTP verification page not visible');
+        }
+
         // Wait for Scripture Forge projects page
+        await this.page.waitForURL('**/accounts.google.co.in/accounts/SetSID', { timeout: this.URLTimeout, waitUntil: 'networkidle' });
         await this.page.waitForURL('**/qa.scriptureforge.org/projects', { timeout: this.URLTimeout, waitUntil: 'networkidle' });
         await this.page.waitForSelector('h2:has-text("Connected")', { timeout: this.elementTimeout });
 

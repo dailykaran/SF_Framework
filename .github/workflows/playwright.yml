@@ -24,6 +24,13 @@ jobs:
         PLAYWRIGHT_ROLE: cc_checker
         SF_CC_CHECKER_EMAIL: ${{ secrets.SF_CC_CHECKER_EMAIL }}
         SF_CC_CHECKER_PASSWORD: ${{ secrets.SF_CC_CHECKER_PASSWORD }}
+        GOOGLE_TOTP_SECRET: ${{ secrets.GOOGLE_TOTP_SECRET }}
+        SF_ADMIN_EMAIL: ${{ secrets.SF_ADMIN_EMAIL }}
+        SF_ADMIN_PASSWORD: ${{ secrets.SF_ADMIN_PASSWORD }}
+        SF_TRANSLATOR_EMAIL: ${{ secrets.SF_TRANSLATOR_EMAIL }}
+        SF_TRANSLATOR_PASSWORD: ${{ secrets.SF_TRANSLATOR_PASSWORD }}
+        SF_REVIEWER_EMAIL: ${{ secrets.SF_REVIEWER_EMAIL }}
+        SF_REVIEWER_PASSWORD: ${{ secrets.SF_REVIEWER_PASSWORD }}
     - name: Generate Allure report
       if: ${{ !cancelled() }}
       run: npm run allure:generate
