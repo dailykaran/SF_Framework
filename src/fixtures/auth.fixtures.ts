@@ -36,19 +36,16 @@ type AuthFixtures = {
   ccCheckerRolePages: PageManager;
 };
 
-function requireEnv(name: string): string {
-  const value = process.env[name];
-  if (!value) {
-    throw new Error(`Missing required environment variable: ${name}. Run global setup first.`);
-  }
-  return path.resolve(value);
+// Defaults match the storageState paths written by global-setup, so CI needs no extra env vars.
+function authPath(name: string, fallback: string): string {
+  return path.resolve(process.env[name] || fallback);
 }
 
 const AUTH = {
-  admin:    requireEnv('ADMIN'),
-  translator:   requireEnv('TRANSLATOR'),
-  reviewer: requireEnv('REVIEWER'),
-  ccChecker: requireEnv('CC_CHECKER'),
+  admin:    authPath('ADMIN', '.auth/sf-admin.json'),
+  translator:   authPath('TRANSLATOR', '.auth/sf-translator.json'),
+  reviewer: authPath('REVIEWER', '.auth/sf-reviewer.json'),
+  ccChecker: authPath('CC_CHECKER', '.auth/sf-cc-checker.json'),
 } as const;
 
 type VideoMode = 'off' | 'on' | 'retain-on-failure' | 'on-first-retry';
@@ -158,9 +155,10 @@ function addPageDiagnostics(page: Page, log: winston.Logger, role: string): void
 
 function checkAuthentication(SESSION_FILEPATH: string): void {
   const sessionFile = path.resolve(SESSION_FILEPATH);
-  // Step 1: Check file exists on disk before use the page
+  // No session file means global setup skipped this role (credentials not provided) → skip the test
   if (!fs.existsSync(sessionFile)) {
-    throw new Error(`Auth session not found: ${sessionFile}. Run global setup first.`);
+    log.warn(`Auth session not found: ${sessionFile}. Skipping test (credentials not configured).`);
+    base.skip(true, `Auth session not found: ${sessionFile} - credentials not configured`);
   }else{
     log.info(`session.json found at: ${sessionFile}`);
   }
