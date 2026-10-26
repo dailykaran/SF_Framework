@@ -18,7 +18,9 @@ jobs:
     - name: Install Playwright Browsers
       run: npx playwright install --with-deps
     - name: Run Playwright tests
-      run: npx playwright test tests/login/sf_cc_user.spec.ts --project=chrome-cc-checker
+      run: |
+        npx playwright test tests/CC_Checking/questions_Answers.spec.ts --workers=1 --project=chrome-cc-checker
+        npx playwright test tests/login/sf_admin_user.spec.ts --workers=1 --project=chrome-admin
       env:
         BASE_URL: ${{ secrets.BASE_URL }}
         PLAYWRIGHT_ROLE: cc_checker
