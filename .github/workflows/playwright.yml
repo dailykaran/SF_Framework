@@ -31,6 +31,7 @@ jobs:
         env:
           BASE_URL: ${{ secrets.BASE_URL }}
           PLAYWRIGHT_ROLE: ${{ matrix.role }}
+          GOOGLE_TOTP_SECRET: ${{ secrets.GOOGLE_TOTP_SECRET }}
           SF_CC_CHECKER_EMAIL: ${{ secrets.SF_CC_CHECKER_EMAIL }}
           SF_CC_CHECKER_PASSWORD: ${{ secrets.SF_CC_CHECKER_PASSWORD }}
           SF_ADMIN_EMAIL: ${{ secrets.SF_ADMIN_EMAIL }}
