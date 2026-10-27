@@ -232,6 +232,11 @@ async function loginUser(
     log.warn(`[${user.role}] skipping login - no credentials set in .env`);
     return;
   }
+  // Paratext/Google roles also need the authenticator secret for 2FA
+  if (user.role !== 'cc_checker' && !process.env.GOOGLE_TOTP_SECRET) {
+    log.warn(`[${user.role}] skipping login - GOOGLE_TOTP_SECRET not set`);
+    return;
+  }
 
   // ── Path 1: JSON does not exist → login and create file ──────────────────
   if (!fs.existsSync(user.file)) {
@@ -268,7 +273,7 @@ async function globalSetup(_config: FullConfig): Promise<void> {
 
   
   
-  const browser = await chromium.launch({ headless: true, args: ['--no-sandbox']});
+  const browser = await chromium.launch({ headless: !!process.env.CI, args: ['--no-sandbox']});
   
   try {
     const selectedRole = process.env.PLAYWRIGHT_ROLE;
