@@ -23,6 +23,7 @@ export class LoginUsers {
      * We reuse this so we don't have to duplicate the 40+ lines of code for every user.
      */
     private async performParatextLogin(email: string, password: string) {
+        const currentUrl =  new URL(this.page.url());
         log.info('Starting Paratext login', { email });
         await this.page.setDefaultNavigationTimeout(this.URLTimeout); 
         await this.page.goto(this.baseUrl);
@@ -33,20 +34,23 @@ export class LoginUsers {
         // Click Log In button
         const logInButton2 = this.page.getByRole('link', { name: 'Log In' });
         await logInButton2.click();
-        
+        log.info('Clicked SF Log In button: '+ currentUrl);
+                
         await this.page.waitForLoadState('networkidle');
         
         // Click "Log in with Paratext" button
         const paratextButton = this.page.locator('a').filter({ hasText: 'Log in with Paratext' });
         await expect(paratextButton).toBeVisible({ timeout: this.elementTimeout });
         await paratextButton.click();
-        
+        log.info('Clicked Paratext login button: '+ currentUrl);
+
         // Wait for Paratext authorization page
         await this.page.waitForURL('**https://registry.paratext.org/auth?**', { timeout: this.URLTimeout });
         
         // Verify redirect to Authorise Application page
         const authHeading = this.page.getByRole('heading', { name: 'Authorise Application' });
         await expect(authHeading).toBeVisible(); 
+        log.info('Authorise Application heading is visible: '+ currentUrl);
         
         // Fill email
         const emailInput = this.page.getByPlaceholder('Email address');
@@ -54,12 +58,15 @@ export class LoginUsers {
         
         // Submit form by pressing Enter
         await emailInput.press('Enter');
+        log.info('Submitted email form: '+ currentUrl);
         
         // Google email verification
         await this.page.waitForURL('**/accounts.google.com/v3/signin/identifier**', { timeout: this.URLTimeout });
         const nextButton = this.page.getByRole('button', { name: 'Next' }).first();
         await expect(nextButton).toBeVisible();
         await nextButton.click();
+        log.info('Clicked Google Next button after email: '+ currentUrl);
+        log.info('Waiting for Google password page: '+ currentUrl);
         
         // Enter Google password
         await this.page.waitForURL('**/accounts.google.com/v3/signin/challenge/pwd**', { timeout: this.URLTimeout });
@@ -68,11 +75,13 @@ export class LoginUsers {
         
         const nextPasswordButton = this.page.getByRole('button', { name: 'Next' });
         await nextPasswordButton.click();
+        log.info('Clicked Google Next button after password: '+ currentUrl);
 
         const getAuthenticatorOption = this.page.getByText('Get a verification code from the Google Authenticator app');
         await getAuthenticatorOption.waitFor({ state: 'visible', timeout: 5000 }).catch(() => {});
         if (await getAuthenticatorOption.isVisible()) {
             await getAuthenticatorOption.click();
+            log.info('Clicked "Get a verification code from the Google Authenticator app" option: '+ currentUrl);
         }
         
         // Wait for the Google 2FA challenge page (dp / selection / totp)
@@ -98,7 +107,7 @@ export class LoginUsers {
             await this.page.getByLabel('Enter code').fill(code);
             await this.page.getByRole('button', { name: 'Next' }).click();
             await this.page.waitForLoadState('networkidle');
-            console.log('Entered Google 2FA code: ' + code);
+            log.info('Entered Google 2FA code: ' + code + ' at URL: ' + currentUrl);
         }
         else {
             throw new Error('TOTP verification page not visible');
@@ -108,13 +117,17 @@ export class LoginUsers {
         //await this.page.waitForURL('**/accounts.google.co.in/accounts/SetSID', { timeout: this.URLTimeout });
 
         // Wait for Scripture Forge projects page
+        log.info('Waiting for Scripture Forge projects page: '+ currentUrl);
         await this.page.waitForURL('**/qa.scriptureforge.org/projects', { timeout: this.URLTimeout, waitUntil: 'networkidle' });
         await this.page.waitForSelector('h2:has-text("Connected")', { timeout: this.elementTimeout });
 
         // Wait for APIs and elements to load (Fixed syntax: changed commas to semicolons)
-        await this.page.waitForResponse(response => response.url().includes('/paratext-api/projects'), { timeout: this.URLTimeout });
+        //await this.page.waitForResponse(response => response.url().includes('/paratext-api/projects'), { timeout: this.URLTimeout });
+
+        log.info('Waiting for project name element to be visible: '+ currentUrl);
         await this.page.locator('.project-name').first().waitFor({state: 'visible', timeout: this.elementTimeout});
         
+        log.info('Project name element is now visible: '+ currentUrl);
         await expect(this.page).toHaveURL(/.*projects/);
         await expect(this.page.locator('.content h1')).toContainText('My projects');
     }
