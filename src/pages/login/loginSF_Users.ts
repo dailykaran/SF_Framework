@@ -15,7 +15,7 @@ export class LoginUsers {
         this.baseUrl = baseUrl;
     }
 
-    private readonly URLTimeout = 40000; // Default timeout for URL navigation and waits
+    private readonly URLTimeout = 50000; // Default timeout for URL navigation and waits
     private readonly elementTimeout = 35000; // Default timeout for element visibility and interactions
     private readonly assertionTimeout = 20000; // Default timeout for assertions
     /**
@@ -69,8 +69,8 @@ export class LoginUsers {
         const nextPasswordButton = this.page.getByRole('button', { name: 'Next' });
         await nextPasswordButton.click();
 
-        await this.page.waitForSelector('text=Get a verification code from the Google Authenticator app', { timeout: 2000 }).catch(() => {});
         const getAuthenticatorOption = this.page.getByText('Get a verification code from the Google Authenticator app');
+        await getAuthenticatorOption.waitFor({ state: 'visible', timeout: 5000 }).catch(() => {});
         if (await getAuthenticatorOption.isVisible()) {
             await getAuthenticatorOption.click();
         }

@@ -8,17 +8,8 @@ jobs:
   test:
     timeout-minutes: 60
     runs-on: ubuntu-latest
-    strategy:
-      fail-fast: false
-      matrix:
-        include:
-          - role: admin
-            project: chrome-admin
-            spec: tests/login/sf_admin_user.spec.ts
-          - role: cc_checker
-            project: chrome-cc-checker
-            spec: tests/login/sf_cc_user.spec.ts
-          
+    env:
+      TZ: Asia/Kolkata
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -26,11 +17,16 @@ jobs:
           node-version: lts/*
       - run: npm ci
       - run: npx playwright install --with-deps
-      - name: Run Playwright tests (${{ matrix.role }})
-        run: npx playwright test ${{ matrix.spec }} --project=${{ matrix.project }}
+      - name: Run admin and CC-checker tests sequentially
+        run: >-
+          npx playwright test
+          tests/login/sf_admin_user.spec.ts
+          tests/login/sf_cc_user.spec.ts
+          --project=chrome-admin
+          --project=chrome-cc-checker
+          --workers=1
         env:
           BASE_URL: ${{ secrets.BASE_URL }}
-          PLAYWRIGHT_ROLE: ${{ matrix.role }}
           GOOGLE_TOTP_SECRET: ${{ secrets.GOOGLE_TOTP_SECRET }}
           SF_CC_CHECKER_EMAIL: ${{ secrets.SF_CC_CHECKER_EMAIL }}
           SF_CC_CHECKER_PASSWORD: ${{ secrets.SF_CC_CHECKER_PASSWORD }}
@@ -42,7 +38,7 @@ jobs:
       - uses: actions/upload-artifact@v4
         if: ${{ !cancelled() }}
         with:
-          name: playwright-and-allure-reports-${{ matrix.role }}
+          name: playwright-and-allure-reports
           path: |
             reports/playwright-report/
             reports/allure-results/

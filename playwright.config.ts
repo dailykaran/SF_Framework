@@ -38,10 +38,10 @@ if (process.env.LOGGING_ENABLED?.toLowerCase() !== 'false') {
 }
 
 const roles = [
-  { name: 'admin', storageState: '.auth/sf-admin.json' },
-  { name: 'translator', storageState: '.auth/sf-translator.json' },
-  { name: 'reviewer', storageState: '.auth/sf-reviewer.json' },
-  { name: 'cc-checker', storageState: '.auth/sf-cc-checker.json' },
+  { name: 'admin', storageState: '.auth/sf-admin.json', testMatch: '**/sf_admin_user.spec.ts' },
+  { name: 'translator', storageState: '.auth/sf-translator.json', testMatch: undefined },
+  { name: 'reviewer', storageState: '.auth/sf-reviewer.json', testMatch: undefined },
+  { name: 'cc-checker', storageState: '.auth/sf-cc-checker.json', testMatch: '**/sf_cc_user.spec.ts' },
 ];
 
 const browsers = [
@@ -51,8 +51,9 @@ const browsers = [
 ];
 // Generate projects dynamically based on roles and browsers
 const browser_role_projects = browsers.flatMap(({ name: browserName, device }) =>
-  roles.map(({ name: roleName, storageState }) => ({
+  roles.map(({ name: roleName, storageState, testMatch }) => ({
     name: `${browserName}-${roleName}`,
+    ...(process.env.CI && testMatch ? { testMatch } : {}),
     use: { ...device, storageState },
   }))
 );
