@@ -15,7 +15,7 @@ export class LoginUsers {
         this.baseUrl = baseUrl;
     }
 
-    private readonly URLTimeout = 60000; // Default timeout for URL navigation and waits
+    private readonly URLTimeout = 40000; // Default timeout for URL navigation and waits
     private readonly elementTimeout = 35000; // Default timeout for element visibility and interactions
     private readonly assertionTimeout = 20000; // Default timeout for assertions
     /**
@@ -69,6 +69,7 @@ export class LoginUsers {
         const nextPasswordButton = this.page.getByRole('button', { name: 'Next' });
         await nextPasswordButton.click();
 
+        await this.page.getByText('Get a verification code from the Google Authenticator app').click();
         // Wait for the Google 2FA challenge page (dp / selection / totp)
         await this.page.waitForURL(/accounts\.google\.com\/v3\/signin\/challenge\/(dp|selection|totp)/, { timeout: this.URLTimeout });
         if (/\/challenge\/(dp|totp|selection)/.test(this.page.url())){
@@ -76,10 +77,12 @@ export class LoginUsers {
             if (!totpSecret) {
                 throw new Error('GOOGLE_TOTP_SECRET is not set; cannot complete Google 2FA');
             }
+                        
             // Google may default to "Tap Yes on your phone"; switch to the authenticator option
             const tryAnother = this.page.getByRole('button', { name: 'Try another way' });
-            if (await tryAnother.isVisible({ timeout: 3000 }).catch(() => false)) {
+            if (await tryAnother.isVisible({ timeout: 2000 }).catch(() => false)) {
                 await tryAnother.click();
+                await this.page.waitForTimeout(2000);
                 await this.page.getByText('Get a verification code from the Google Authenticator app').click();
             }
             // Avoid generating a code in the last seconds of its 30s window
