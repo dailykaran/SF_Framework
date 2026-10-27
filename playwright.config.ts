@@ -77,7 +77,8 @@ export default defineConfig({
   
   use: {
     viewport:          { width: 1440, height: 900 },
-    headless:          !!process.env.CI || true,
+    // CI is always headless; locally set HEADLESS=false in .env to watch the browser
+    headless:          !!process.env.CI || process.env.HEADLESS?.toLowerCase() !== 'false',
     trace:             'retain-on-failure',
     screenshot:        'only-on-failure',
     video:             { mode: 'retain-on-failure', size: { width: 1280, height: 720 } },

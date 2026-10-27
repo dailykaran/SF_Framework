@@ -273,7 +273,7 @@ async function globalSetup(_config: FullConfig): Promise<void> {
 
   
   
-  const browser = await chromium.launch({ headless: !!process.env.CI || process.env.HEADLESS?.toLowerCase() === 'true', args: ['--no-sandbox']});
+  const browser = await chromium.launch({ headless: !!process.env.CI || process.env.HEADLESS?.toLowerCase() !== 'false', args: ['--no-sandbox']});
   
   try {
     const selectedRole = process.env.PLAYWRIGHT_ROLE;

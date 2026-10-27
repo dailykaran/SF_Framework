@@ -69,7 +69,12 @@ export class LoginUsers {
         const nextPasswordButton = this.page.getByRole('button', { name: 'Next' });
         await nextPasswordButton.click();
 
-        await this.page.getByText('Get a verification code from the Google Authenticator app').click();
+        await this.page.waitForSelector('text=Get a verification code from the Google Authenticator app', { timeout: 2000 }).catch(() => {});
+        const getAuthenticatorOption = this.page.getByText('Get a verification code from the Google Authenticator app');
+        if (await getAuthenticatorOption.isVisible()) {
+            await getAuthenticatorOption.click();
+        }
+        
         // Wait for the Google 2FA challenge page (dp / selection / totp)
         await this.page.waitForURL(/accounts\.google\.com\/v3\/signin\/challenge\/(dp|selection|totp)/, { timeout: this.URLTimeout });
         if (/\/challenge\/(dp|totp|selection)/.test(this.page.url())){
@@ -101,7 +106,7 @@ export class LoginUsers {
 
         // Wait for the Google SetSID page
         //await this.page.waitForURL('**/accounts.google.co.in/accounts/SetSID', { timeout: this.URLTimeout });
-        
+
         // Wait for Scripture Forge projects page
         await this.page.waitForURL('**/qa.scriptureforge.org/projects', { timeout: this.URLTimeout, waitUntil: 'networkidle' });
         await this.page.waitForSelector('h2:has-text("Connected")', { timeout: this.elementTimeout });
