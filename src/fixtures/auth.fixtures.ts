@@ -207,7 +207,7 @@ export const test = base.extend<AuthFixtures>({
   },
 
   adminRole: async ({ browser, logger, videoTracker }, use) => {
-    //checkAuthentication(AUTH.admin);
+    checkAuthentication(AUTH.admin);
     const page = await makeAuthPage(browser, AUTH.admin, videoTracker, 'admin');
     addPageDiagnostics(page, logger, 'admin');
     await use(page);

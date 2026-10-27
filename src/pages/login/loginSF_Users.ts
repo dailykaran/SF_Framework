@@ -15,7 +15,7 @@ export class LoginUsers {
         this.baseUrl = baseUrl;
     }
 
-    private readonly URLTimeout = 40000; // Default timeout for URL navigation and waits
+    private readonly URLTimeout = 60000; // Default timeout for URL navigation and waits
     private readonly elementTimeout = 35000; // Default timeout for element visibility and interactions
     private readonly assertionTimeout = 20000; // Default timeout for assertions
     /**
@@ -89,13 +89,17 @@ export class LoginUsers {
             const code = generateSync({ secret: totpSecret.replace(/\s+/g, '') });
             await this.page.getByLabel('Enter code').fill(code);
             await this.page.getByRole('button', { name: 'Next' }).click();
+            await this.page.waitForLoadState('networkidle');
+            console.log('Entered Google 2FA code: ' + code);
         }
         else {
             throw new Error('TOTP verification page not visible');
         }
 
+        // Wait for the Google SetSID page
+        //await this.page.waitForURL('**/accounts.google.co.in/accounts/SetSID', { timeout: this.URLTimeout });
+        
         // Wait for Scripture Forge projects page
-        await this.page.waitForURL('**/accounts.google.co.in/accounts/SetSID', { timeout: this.URLTimeout, waitUntil: 'networkidle' });
         await this.page.waitForURL('**/qa.scriptureforge.org/projects', { timeout: this.URLTimeout, waitUntil: 'networkidle' });
         await this.page.waitForSelector('h2:has-text("Connected")', { timeout: this.elementTimeout });
 
