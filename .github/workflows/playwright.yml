@@ -1,4 +1,4 @@
-name: Scripture Forge CC Checker Test
+name: Scripture Forge Test
 on:
   push:
     branches: [ main, master ]
@@ -12,12 +12,13 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - role: cc_checker
-            project: chrome-cc-checker
-            spec: tests/login/sf_cc_user.spec.ts
           - role: admin
             project: chrome-admin
             spec: tests/login/sf_admin_user.spec.ts
+          - role: cc_checker
+            project: chrome-cc-checker
+            spec: tests/login/sf_cc_user.spec.ts
+          
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
