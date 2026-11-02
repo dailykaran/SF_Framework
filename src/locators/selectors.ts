@@ -25,7 +25,10 @@ export const Selectors = {
   SYNCHRONIZATION: {
     CANCEL_BUTTON: 'btn-cancel-sync',
     CANCEL_MESSAGE: 'sync-failure-support-message',
-    SNACK_BAR_MESSAGE: 'simple-snack-bar',
+  },
+
+  SNACK_BAR:{
+    MESSAGE: 'simple-snack-bar',
   },
 
   OFFLINE_DOM: {
@@ -79,7 +82,19 @@ export const Selectors = {
   // Banner messages
   BANNER: {
     NO_CHAPTER_PERMISSION_MESSAGE: '#target-text-area .notice-content',
-  }
+    SHARE_DIALOG: '.configurations app-notice .notice-content',
+  },
 
+  SHARE_DIALOG: {
+    SHARE: 'share-btn',
+    SHARE_TITLE: 'mat-dialog-container h1 span',
+    INVITATION_ROLE: '.configuration-invitation-role div a',
+    LINK_TYPE: '.configuration-link-type div a',
+    LINK_EXPIRES: '.configuration-option transloco+a',
+    LINK_LOCALIZATION: '.configuration-option .empty-field+a',
+    CHANGE_LINK_BUTTON: 'mat-selection-list mat-list-option',
+    COPY_LINK_BUTTON: '.mdc-dialog__actions #copy-btn',
+    CLOSE_BUTTON: 'mat-dialog-container h1 button'
+  }
 
 } as const;
