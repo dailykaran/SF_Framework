@@ -1,5 +1,10 @@
 export const Inputs = {
 
+  //landing page
+  LANDING: {
+    URL: 'https://qa.scriptureforge.org',
+    TITLE: 'Scripture Forge QA'
+  },
   // Projects name
   PROJECT_NAME: {
     F03: '- 03F',
@@ -62,5 +67,29 @@ export const Inputs = {
   LABELS: {
     PROJECT_NAME: 'Project Name',
   },
+
+  SHARE_DIALOG: {
+    INVITATION_ROLE: {
+      CommunityChecker: 'Community Checker',
+      Commenter: 'Commenter',
+      Viewer: 'Viewer',
+    },
+    LINK_TYPE: {
+      AnyoneWithTheLink: 'Anyone with the link',
+       OneRecipient : ' One recipient '
+    },
+    LINK_EXPIRES: {
+      FourteenDays: '14 days',
+      SevenDays: '7 days',
+      ThirtyDays: '30 days',
+      NinetyDays: '90 days',
+      OneYear: '1 year'
+    },
+    LINK_LOCALIZATION: {
+      EnglishUS: 'English (US)',
+      EnglishUK: ' English (UK)',
+      Spanish: 'Español',
+    },
+  }
 
 } as const;

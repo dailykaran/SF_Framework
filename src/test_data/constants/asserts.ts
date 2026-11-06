@@ -1,4 +1,16 @@
 export const Asserts = {
+  
+  // Landing page footer links
+  LANDING: {
+    termsandconditions: 'terms',
+    privacypolicy: 'privacy',
+    helplinks: 'help',
+    community: 'community',
+    global: 'global',
+    payap: 'payap',
+    asia: 'asia',
+  },
+  
   // Global layout
   NAV: {
     LOGO:         '',
@@ -14,6 +26,7 @@ export const Asserts = {
  // Snack Bar
   SNACK_BAR: {
     SYNC_SUCCESS_MESSAGE: 'Successfully synchronized',
+    SHARE_DIALOG_COPY_LINK: 'Link copied to clipboard'
   },
 
   // synchronization
@@ -51,11 +64,16 @@ export const Asserts = {
   // Banner messages
   BANNER: {
     NO_CHAPTER_PERMISSION_MESSAGE: " You don't have permission to edit this chapter, even though you have the Administrator role. Permissions can only be changed in Paratext. ",
+    SHARE_DIALOG_OFFLINE_MESSAGE: 'Inviting users by link sharing is unavailable while offline.',
   },
 
   //Manage Questions
   MANAGE_QUESTIONS: {
     QUESTION_QUILL_EDITOR_VERSE_DATA_SEGMENT: 'data-segment',
   },
+
+  DIALOG_TITLE: {
+    SHARE: 'Share',
+  }
 
 } as const;

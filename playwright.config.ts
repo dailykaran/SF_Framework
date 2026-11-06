@@ -54,10 +54,17 @@ const browser_role_projects = browsers.flatMap(({ name: browserName, device }) =
   roles.map(({ name: roleName, storageState, testMatch }) => ({
     name: `${browserName}-${roleName}`,
     ...(process.env.CI && testMatch ? { testMatch } : {}),
+    testIgnore: '**/landingPage/**',
     use: { ...device, storageState },
   }))
 );
 
+// Guest profile: no storageState, so pages load as an anonymous visitor (public landing page).
+const guest_projects = browsers.map(({ name: browserName, device }) => ({
+  name: `${browserName}-guest`,
+  testMatch: '**/landingPage/**/*.spec.ts',
+  use: { ...device, storageState: { cookies: [], origins: [] } },
+}));
 
 
 export default defineConfig({
@@ -91,7 +98,6 @@ export default defineConfig({
     },  */
   },
 
-  projects: 
-    browser_role_projects,
+  projects: [...browser_role_projects, ...guest_projects],
   
 });
