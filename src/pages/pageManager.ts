@@ -7,6 +7,7 @@ import { QuestionsAndAnswersPage } from './Community_Checker/questions_Answers';
 import { SettingsPage } from './Settings/settings';
 import { SynchronizationPage } from './Synchronization/syncWithParatext';
 import { SF_Components } from '../components/sf_components';
+import { LandingPage } from './SF_Home/landing';
 
 /**
  * PageManager provides lazy-instantiated access to all Page Objects
@@ -24,6 +25,7 @@ export class PageManager {
   private _settingsPage?: SettingsPage;
   private _synchronizationPage?: SynchronizationPage;
   private _sfComponents?: SF_Components;
+  private _landingPage?: LandingPage;
 
   constructor(page: Page, context: BrowserContext, logger: winston.Logger) {
     this.page = page;
@@ -74,6 +76,14 @@ export class PageManager {
       this._synchronizationPage = new SynchronizationPage(this.page, this.context, this.logger);
     }
     return this._synchronizationPage;
+  }
+
+  /** Public landing page object (no login required) */
+  get landing(): LandingPage {
+    if (!this._landingPage) {
+      this._landingPage = new LandingPage(this.page, this.context, this.logger);
+    }
+    return this._landingPage;
   }
 
   /** SF Components page object */

@@ -1,5 +1,10 @@
 export const Inputs = {
 
+  //landing page
+  LANDING: {
+    URL: 'https://qa.scriptureforge.org',
+    TITLE: 'Scripture Forge QA'
+  },
   // Projects name
   PROJECT_NAME: {
     F03: '- 03F',

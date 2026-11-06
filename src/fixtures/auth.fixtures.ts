@@ -28,12 +28,14 @@ type AuthFixtures = {
   translatorRole:   Page;
   reviewerRole: Page;
   ccCheckerRole: Page;
+  guestRole: Page;
 
   // Page Managers per role
   adminRolePages: PageManager;
   translatorRolePages: PageManager;
   reviewerRolePages: PageManager;
   ccCheckerRolePages: PageManager;
+  guestRolePages: PageManager;
 };
 
 // Defaults match the storageState paths written by global-setup, so CI needs no extra env vars.
@@ -71,18 +73,19 @@ function shouldRecordVideo(mode: VideoMode, testInfo: TestInfo): boolean {
 const slug = (text: string): string => text.replace(/[^a-zA-Z0-9]+/g, '-').replace(/^-|-$/g, '').slice(0, 60);
 
 /**
- * Creates a new browser context pre-loaded with the given storageState.
+ * Creates a new browser context pre-loaded with the given storageState
+ * (pass undefined for an anonymous guest context with no cookies/session).
  * Contexts from browser.newContext() don't inherit the config `use.video`, so it is applied here.
  */
 async function makeAuthPage(
   browser: import('@playwright/test').Browser,
-  storageStatePath: string,
+  storageStatePath: string | undefined,
   tracker: VideoTracker,
   role: string,
 ): Promise<Page> {
   const viewport = { width: 1440, height: 900 };
   const context = await browser.newContext({
-    storageState: storageStatePath,
+    ...(storageStatePath && { storageState: storageStatePath }),
     viewport,
     ...(tracker.record && { recordVideo: { dir: path.join(tracker.dir, role), size: tracker.size ?? viewport } }),
   });
@@ -141,6 +144,11 @@ function addPageDiagnostics(page: Page, log: winston.Logger, role: string): void
     }
   });
   page.on('pageerror', error => {
+    // The QA landing page references an undefined third-party `bugsnag`; it is not a test failure.
+    if (/bugsnag is not defined/i.test(error.message)) {
+      log.debug('Ignored known browser page error', { role, message: error.message });
+      return;
+    }
     log.error('Browser page error', { role, error: serializeError(error) });
   });
   page.on('requestfailed', request => {
@@ -238,6 +246,14 @@ export const test = base.extend<AuthFixtures>({
     await page.context().close();
   },
 
+  // Guest: anonymous visitor, no storageState and no auth-session check
+  guestRole: async ({ browser, logger, videoTracker }, use) => {
+    const page = await makeAuthPage(browser, undefined, videoTracker, 'guest');
+    addPageDiagnostics(page, logger, 'guest');
+    await use(page);
+    await page.context().close();
+  },
+
   adminRolePages: async ({ adminRole, logger }, use) => {
     await use(new PageManager(adminRole, adminRole.context(), logger));
   },
@@ -252,6 +268,10 @@ export const test = base.extend<AuthFixtures>({
 
   ccCheckerRolePages: async ({ ccCheckerRole, logger }, use) => {
     await use(new PageManager(ccCheckerRole, ccCheckerRole.context(), logger));
+  },
+  
+  guestRolePages: async ({ guestRole, logger }, use) => {
+    await use(new PageManager(guestRole, guestRole.context(), logger));
   },
   
 });

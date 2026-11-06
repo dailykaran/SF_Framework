@@ -1,9 +1,12 @@
 export const Selectors = {
   // Global layout
-  NAV: {
-    LOGO:         '',
-    USER_MENU:    '',
-    NOTIFICATIONS:  '',
+  LANDING: {
+    LOGO: 'img[alt*="QA"]',
+    FOOTER:    'footer',
+    PROFILES:  '#profile a',
+    LANGUAGE_SELECT: 'selectLanguage',
+    LANGUAGE_SELECT_CLASS: 'select',
+    ARABIC_LANGUAGE_LABEL: 'العربية'
   },
 
   // Edit & Review

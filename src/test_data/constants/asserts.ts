@@ -1,4 +1,16 @@
 export const Asserts = {
+  
+  // Landing page footer links
+  LANDING: {
+    termsandconditions: 'terms',
+    privacypolicy: 'privacy',
+    helplinks: 'help',
+    community: 'community',
+    global: 'global',
+    payap: 'payap',
+    asia: 'asia',
+  },
+  
   // Global layout
   NAV: {
     LOGO:         '',

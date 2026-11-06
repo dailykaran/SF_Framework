@@ -260,17 +260,35 @@ async function loginUser(
 // Entry point
 // ─────────────────────────────────────────────────────────────────────────────
 
-async function globalSetup(_config: FullConfig): Promise<void> {
+async function globalSetup(config: FullConfig): Promise<void> {
   clearFrameworkLog();
   pruneOldLogs();
   log.info('Global authentication setup started');
   log.debug('Global setup configuration', {
     baseUrl: baseurl,
     selectedRole: process.env.PLAYWRIGHT_ROLE ?? 'all',
+    projects: config.projects.map(project => project.name),
     users: USERS.map(user => user.role),
   });
   fs.mkdirSync(AUTH_DIR, { recursive: true });
 
+  const requestedProjects: string[] = [];
+  for (let index = 2; index < process.argv.length; index += 1) {
+    const argument = process.argv[index];
+    if (argument.startsWith('--project=')) {
+      requestedProjects.push(argument.slice('--project='.length));
+    } else if (argument === '--project' && process.argv[index + 1]) {
+      requestedProjects.push(process.argv[index + 1]);
+      index += 1;
+    }
+  }
+  const guestOnlyRun = requestedProjects.length > 0
+    && requestedProjects.every(projectName => projectName.endsWith('-guest'));
+
+  if (process.env.PLAYWRIGHT_ROLE === 'guest' || guestOnlyRun) {
+    log.info('Guest-only run - skipping all logins');
+    return;
+  }
   
   
   const browser = await chromium.launch({ headless: !!process.env.CI || process.env.HEADLESS?.toLowerCase() !== 'false', args: ['--no-sandbox']});
