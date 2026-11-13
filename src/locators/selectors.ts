@@ -44,6 +44,8 @@ export const Selectors = {
     UNCONNECTED_PROJECT: 'div.user-unconnected-project',
     CONNECT_SUBMIT_BUTTON: '#connect-submit-button',
     CONNECT_PROGRESS: 'mat-progress-bar.progress-bar',
+    AVATAR: 'avatarId',
+    LOGOUT: 'log-out-link',
   },
   SETTINGS: {
     DANGER_ZONE: 'app-settings h2',

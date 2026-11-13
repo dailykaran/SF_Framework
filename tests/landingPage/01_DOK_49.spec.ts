@@ -3,7 +3,7 @@ import { Selectors } from '../../src/locators/selectors';
 import { Asserts } from '../../src/test_data/constants/asserts';
 import { Inputs } from '../../src/test_data/constants/inputs';
 
-test.beforeEach('DOK-48: SF admin setup for connecting a project', async ({ guestRole }) => {
+test.beforeEach('DOK-48: Navigate to the Scriptureforge landing page', async ({ guestRole }) => {
     await guestRole.goto('https://qa.scriptureforge.org');
 });
 

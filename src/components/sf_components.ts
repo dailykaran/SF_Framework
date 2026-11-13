@@ -24,6 +24,14 @@ export class SF_Components extends PlaywrightWrapper {
         });
     }
     
+    async waitForSnackBarToDisappear(): Promise<void> {
+        await test.step('Wait for Snack Bar to disappear', async () => {
+            this.logger.info('Waiting for Snack Bar to disappear step');
+            await this.smartWait.waitForNetworkIdle();
+            await this.waitForElementHidden(`${Selectors.SNACK_BAR.MESSAGE}`, 'Snack Bar message should be hidden');
+        });
+    }
+    
     async getNoChapterPermission(): Promise<string> {
         return await test.step('Get No Chapter Permission message', async () => {
             this.logger.info('Getting No Chapter Permission message step');
@@ -85,6 +93,17 @@ export class SF_Components extends PlaywrightWrapper {
             await this.page.locator(`${Selectors.SHARE_DIALOG.CHANGE_LINK_BUTTON}`, { hasText: linkLocalization }).click();            
             await this.getByClass(`${Selectors.SHARE_DIALOG.COPY_LINK_BUTTON}`).click();
 
+        });
+    }
+
+    async copyClipboardInviteURL(): Promise<string> {
+        return await test.step('Copy Clipboard Invite URL', async () => {
+            this.logger.info('Copying Clipboard Invite URL step');
+            await this.smartWait.waitForNetworkIdle();
+            const clipboardText = await this.page.evaluate(() =>
+                (globalThis as unknown as { navigator: { clipboard: { readText(): Promise<string> } } }).navigator.clipboard.readText()
+            );
+            return clipboardText ?? '';
         });
     }
 }

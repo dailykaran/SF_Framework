@@ -1,4 +1,4 @@
-import { test as base, expect, type Page, type TestInfo } from '@playwright/test';
+import { test as base, expect, chromium, firefox, webkit, type Page, type TestInfo } from '@playwright/test';
 import { mergeVideos, type RecordedVideo } from '../utils/video/mergeVideos';
 import * as path from 'path';
 import * as fs from 'fs';
@@ -50,6 +50,9 @@ const AUTH = {
   ccChecker: authPath('CC_CHECKER', '.auth/sf-cc-checker.json'),
 } as const;
 
+// GUEST_BROWSER (chrome | firefox | webkit) makes the guest role use its own browser instead of the project's.
+const GUEST_LAUNCHERS = { chrome: chromium, chromium, firefox, webkit } as const;
+
 type VideoMode = 'off' | 'on' | 'retain-on-failure' | 'on-first-retry';
 
 /** Collects the per-role recordings of one test so they can be merged into a single file per spec. */
@@ -87,6 +90,8 @@ async function makeAuthPage(
   const context = await browser.newContext({
     ...(storageStatePath && { storageState: storageStatePath }),
     viewport,
+    // Config-level `permissions` (e.g. clipboard-read) are inherited by every context and only Chromium supports them
+    ...(browser.browserType().name() !== 'chromium' && { permissions: [] }),
     ...(tracker.record && { recordVideo: { dir: path.join(tracker.dir, role), size: tracker.size ?? viewport } }),
   });
   const page = await context.newPage();
@@ -247,11 +252,19 @@ export const test = base.extend<AuthFixtures>({
   },
 
   // Guest: anonymous visitor, no storageState and no auth-session check
-  guestRole: async ({ browser, logger, videoTracker }, use) => {
-    const page = await makeAuthPage(browser, undefined, videoTracker, 'guest');
+  guestRole: async ({ browser, headless, logger, videoTracker }, use) => {
+    const key = process.env.GUEST_BROWSER?.trim().toLowerCase();
+    if (key && !(key in GUEST_LAUNCHERS)) {
+      throw new Error(`Invalid GUEST_BROWSER "${key}". Use chrome, firefox or webkit.`);
+    }
+    const guestBrowser = key
+      ? await GUEST_LAUNCHERS[key as keyof typeof GUEST_LAUNCHERS].launch({ headless: true })
+      : browser;
+    const page = await makeAuthPage(guestBrowser, undefined, videoTracker, 'guest');
     addPageDiagnostics(page, logger, 'guest');
     await use(page);
     await page.context().close();
+    if (guestBrowser !== browser) await guestBrowser.close();
   },
 
   adminRolePages: async ({ adminRole, logger }, use) => {

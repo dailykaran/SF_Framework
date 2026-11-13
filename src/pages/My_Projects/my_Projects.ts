@@ -96,4 +96,13 @@ export class MyProjectsPage extends PlaywrightWrapper {
     });
   }
 
+  async logoutFromProject(): Promise<void> {
+    await test.step(`Logout from project`, async () => {
+      this.logger.info('Logout from project');
+      await this.getById(Selectors.MY_PROJECTS.AVATAR).click();
+      await this.getById(Selectors.MY_PROJECTS.LOGOUT).click();
+      await this.smartWait.waitForNetworkIdle();
+    });
+  }
+
 }
