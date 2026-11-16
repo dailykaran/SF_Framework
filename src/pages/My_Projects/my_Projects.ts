@@ -74,7 +74,8 @@ export class MyProjectsPage extends PlaywrightWrapper {
       this.logger.info('SF admin navigate to settings page', { projectName });
       await this.openProjects();
       await this.selectProject(projectName);
-              
+
+      await this.wait('minWait')
       await this.interactWithRole('link', Inputs.LINK.EDIT_REVIEW, 'click');
       await this.smartWait.waitForNetworkIdle();
       await this.interactWithRole('link', Inputs.SETTINGS.PAGE, 'click');

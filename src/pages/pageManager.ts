@@ -1,4 +1,5 @@
-import { type Page, BrowserContext } from '@playwright/test';
+import { Page, BrowserContext } from '@playwright/test';
+
 import type winston from 'winston';
 import { EditReviewPage } from './Translate/editReview';
 import { MyProjectsPage } from './My_Projects/my_Projects';
@@ -8,6 +9,7 @@ import { SettingsPage } from './Settings/settings';
 import { SynchronizationPage } from './Synchronization/syncWithParatext';
 import { SF_Components } from '../components/sf_components';
 import { LandingPage } from './SF_Home/landing';
+import { JoinPage } from './SF_Home/join';
 
 /**
  * PageManager provides lazy-instantiated access to all Page Objects
@@ -26,6 +28,7 @@ export class PageManager {
   private _synchronizationPage?: SynchronizationPage;
   private _sfComponents?: SF_Components;
   private _landingPage?: LandingPage;
+  private _joinPage?: JoinPage;
 
   constructor(page: Page, context: BrowserContext, logger: winston.Logger) {
     this.page = page;
@@ -92,5 +95,13 @@ export class PageManager {
       this._sfComponents = new SF_Components(this.page, this.context, this.logger);
     }
     return this._sfComponents;
+  }
+
+  /** Join page object */
+  get join(): JoinPage {
+    if (!this._joinPage) {
+      this._joinPage = new JoinPage(this.page, this.context, this.logger);
+    }
+    return this._joinPage;
   }
 }

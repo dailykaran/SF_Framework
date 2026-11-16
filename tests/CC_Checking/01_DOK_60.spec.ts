@@ -2,13 +2,14 @@ import { test, expect } from '../../src/fixtures/auth.fixtures';
 import { Selectors } from '../../src/locators/selectors';
 import { Asserts } from '../../src/test_data/constants/asserts';
 import { Inputs } from '../../src/test_data/constants/inputs';
+import { CommonFakerData } from '../../src/utils/data/commonDataGenerator'; 
 
 // Global variable to store the invite URL
 let inviteURL: string; 
 
 test.use({
         permissions: ['clipboard-read', 'clipboard-write'],
-}); 
+});
 
 test.beforeAll('DOK-48: SF admin setup for connecting a project', async ({ adminRolePages }) => {
     await adminRolePages.myProjects.adminConnectProjects(Inputs.PROJECT_NAME.TNN01);
@@ -27,7 +28,7 @@ test('DOK-60: An error appears when adding a project to the user for the first t
         tag: ['@smoke'],
         annotation: { type: 'Issue', description: 'https://jira.example.com/SF-1822' },
     },
-    async ({ adminRolePages, guestRolePages }) => {
+    async ({ adminRolePages }) => {
 
     await adminRolePages.myProjects.openProjects();
     await adminRolePages.myProjects.selectProject(Inputs.PROJECT_NAME.TNN01);
@@ -40,9 +41,9 @@ test('DOK-60: An error appears when adding a project to the user for the first t
     
     await adminRolePages.sfComponents.getProjectCopyOfInvitationLink(
         Inputs.SHARE_DIALOG.LINK_LOCALIZATION.EnglishUS,
-        Inputs.SHARE_DIALOG.INVITATION_ROLE.Commenter, 
+        Inputs.SHARE_DIALOG.INVITATION_ROLE.CommunityChecker, 
         Inputs.SHARE_DIALOG.LINK_TYPE.OneRecipient, 
-        Inputs.SHARE_DIALOG.LINK_EXPIRES.NinetyDays
+        Inputs.SHARE_DIALOG.LINK_EXPIRES.SevenDays
     );
 
     await adminRolePages.page.locator(`${Selectors.SHARE_DIALOG.COPY_LINK_BUTTON}`).click();
@@ -52,23 +53,40 @@ test('DOK-60: An error appears when adding a project to the user for the first t
     await adminRolePages.sfComponents.waitForSnackBarToDisappear(); 
     await adminRolePages.sfComponents.page.waitForLoadState('networkidle');
     await adminRolePages.myProjects.logoutFromProject();
-    //await adminRolePages.sfComponents.page.context().close();
 
-    const page = await guestRolePages.page.context().newPage();
-        
-    await page.goto(inviteURL);
-    await expect(page.url()).toContain("join");
-    //await guestRolePages.page.context().close();
-    await page.waitForTimeout(4000);
-});
-
-test.skip('DOK-60: Guest user accesses the invite URL', async ({ guestRolePages }) => {
-    
-    const page = await guestRolePages.page.context().newPage();
-        
-    await page.goto(inviteURL);
-    await expect(page.url()).toContain("join");
-    //await guestRolePages.page.context().close();
-    await page.waitForTimeout(4000);
     
 });
+
+ 
+test.describe('the guest user flow', () => {
+        test.use({ storageState: { cookies: [], origins: [] } });
+        test('DOK-60: Guest user accesses the invite URL', async ({ guestRolePages }) => {
+            
+            await guestRolePages.join.joinProjectByURL(inviteURL);
+            await expect(guestRolePages.join.page.url()).toContain("join");
+            await guestRolePages.join.enterUserName(CommonFakerData.getFirstName() + ' Guest');
+            await guestRolePages.join.getJoinButton();
+            const joinedProjectName = await guestRolePages.join.getByClass(Selectors.JOIN_PAGE.JOINED_PROJECT_NAME).innerText();
+            expect(joinedProjectName.includes(Inputs.PROJECT_NAME.TNN01.replace(/[^a-zA-Z0-9]/g, ''))).toBeTruthy();
+            expect(joinedProjectName).toContain(Inputs.PROJECT_NAME.TNN01.replace(/[^a-zA-Z0-9]/g, ''));
+            await guestRolePages.join.page.waitForLoadState('networkidle');
+    
+        });        
+})
+
+
+/* test.describe('the guest user flow', () => {
+    test.use({ storageState: { cookies: [], origins: [] } });
+    test('DOK-60: Guest user accesses the invite URL (Firefox)', async ({}) => {
+        const browser = await firefox.launch();
+        const context = await browser.newContext({ permissions: [] }); // clean, no storage state
+        const page = await context.newPage();
+
+        await page.goto(inviteURL);
+        expect(await page.url()).toContain("join");
+        await page.waitForTimeout(5000);
+
+        await context.close();
+        await browser.close();
+    });
+}); */

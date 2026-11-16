@@ -100,6 +100,11 @@ export const Selectors = {
     CHANGE_LINK_BUTTON: 'mat-selection-list mat-list-option',
     COPY_LINK_BUTTON: '.mdc-dialog__actions #copy-btn',
     CLOSE_BUTTON: 'mat-dialog-container h1 button'
+  },
+
+  JOIN_PAGE: {
+    USER_NAME_INPUT: 'input.mat-mdc-input-element',
+    JOINED_PROJECT_NAME: 'mat-toolbar-row .project-name',
   }
 
 } as const;
