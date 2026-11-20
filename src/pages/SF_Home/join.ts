@@ -15,8 +15,9 @@ export class JoinPage extends PlaywrightWrapper {
   }
 
   async enterUserName(userName: string) {
-    await test.step(`enter user name and ${userName}`, async () => {
+    await test.step(`Entering user name: ${userName}`, async () => {
       await this.getByClass(Selectors.JOIN_PAGE.USER_NAME_INPUT).fill(userName);
+      this.logger.info(`Entered user name: ${userName}`);
     });
   }
 

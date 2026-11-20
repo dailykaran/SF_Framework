@@ -21,7 +21,7 @@ async function globalTeardown(): Promise<void> {
   /*
    * Remove all session files in the .auth directory.
    */
-  if (!fs.existsSync(AUTH_DIR)) return;
+/*   if (!fs.existsSync(AUTH_DIR)) return;
 
    const files = fs
     .readdirSync(AUTH_DIR)
@@ -31,7 +31,7 @@ async function globalTeardown(): Promise<void> {
     fs.rmSync(path.join(AUTH_DIR, file), { force: true });
     log.info('Removed session', { file });
   }
-  // End of session removal loop
+  // End of session removal loop */
   log.info('Auth teardown complete');
   await appendFrameworkLogToSpecLogs(log, startOffset);
 }

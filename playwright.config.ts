@@ -38,10 +38,10 @@ if (process.env.LOGGING_ENABLED?.toLowerCase() !== 'false') {
 }
 
 const roles = [
-  { name: 'admin', storageState: '.auth/sf-admin.json', testMatch: '**/sf_admin_user.spec.ts' },
+  { name: 'admin', storageState: '.auth/sf-admin.json', testMatch: '**/*.spec.ts' },
   { name: 'translator', storageState: '.auth/sf-translator.json', testMatch: undefined },
   { name: 'reviewer', storageState: '.auth/sf-reviewer.json', testMatch: undefined },
-  { name: 'cc-checker', storageState: '.auth/sf-cc-checker.json', testMatch: '**/sf_cc_user.spec.ts' },
+  { name: 'cc-checker', storageState: '.auth/sf-cc-checker.json', testMatch: '**/*.spec.ts' },
 ];
 
 const browsers = [
@@ -54,7 +54,7 @@ const browser_role_projects = browsers.flatMap(({ name: browserName, device }) =
   roles.map(({ name: roleName, storageState, testMatch }) => ({
     name: `${browserName}-${roleName}`,
     ...(process.env.CI && testMatch ? { testMatch } : {}),
-    testIgnore: ['**/landingPage/**', '**/global_auth/**', '**/data/**', '**/login/**'],
+    //testIgnore: ['**/landingPage/**', '**/global_auth/**', '**/data/**', '**/login/**'],
     use: { ...device, storageState },
   }))
 );
